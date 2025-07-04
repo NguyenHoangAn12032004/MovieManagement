@@ -1,0 +1,35 @@
+@model MovieManagement.Models.Genre
+
+@{
+    ViewData["Title"] = "Chi tiết thể loại phim";
+}
+
+<div class="card">
+    <div class="card-header bg-info bg-opacity-25">
+        <h4 class="mb-0">Chi tiết thể loại phim</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-2">ID</dt>
+            <dd class="col-sm-10">@Model.Id</dd>
+            
+            <dt class="col-sm-2">Tên thể loại</dt>
+            <dd class="col-sm-10">@Model.Name</dd>
+        </dl>
+    </div>
+    <div class="card-footer">
+        <div class="d-flex justify-content-between">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+            <div>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger ms-2">
+                    <i class="bi bi-trash me-1"></i> Xóa
+                </a>
+            </div>
+        </div>
+    </div>
+</div> 

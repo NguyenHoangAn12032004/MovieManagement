@@ -1,0 +1,116 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "Đăng ký từ Google";
+}
+
+@section Styles {
+    <style>
+        .external-login-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2.5rem 2rem;
+            max-width: 420px;
+            margin: 40px auto 0 auto;
+        }
+        .external-login-card h1 {
+            font-weight: bold;
+            color: #198754;
+            font-size: 2rem;
+        }
+        .external-login-card h2 {
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 600;
+        }
+        .external-login-card .text-info {
+            color: #0dcaf0;
+            font-size: 1rem;
+        }
+        .floating-label-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .floating-label {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            color: #888;
+            font-size: 1rem;
+            pointer-events: none;
+            transition: 0.2s;
+            background: #fff;
+            padding: 0 4px;
+        }
+        .floating-input:focus + .floating-label,
+        .floating-input:not(:placeholder-shown) + .floating-label {
+            top: -12px;
+            left: 12px;
+            font-size: 0.95rem;
+            color: #198754;
+            background: #fff;
+        }
+        .floating-input {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+            padding: 14px 16px 14px 16px;
+            width: 100%;
+            font-size: 1rem;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+        .floating-input:focus {
+            border-color: #198754;
+            outline: none;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            padding: 0.7rem 2.2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #38f9d7, #43e97b);
+        }
+    </style>
+}
+
+<div class="external-login-card">
+    <h1 class="mb-2"><i class="fab fa-google me-2"></i>@ViewData["Title"]</h1>
+    <h2 id="external-login-title" class="mb-3">Hoàn tất tài khoản với <span style="color:#198754">@Model.ProviderDisplayName</span></h2>
+    <hr />
+
+    <p id="external-login-description" class="text-info mb-4">
+        Bạn đã xác thực thành công với <strong>@Model.ProviderDisplayName</strong>.<br>
+        Vui lòng nhập địa chỉ email và tên để hoàn tất việc tạo tài khoản.
+    </p>
+
+    <form asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+        <div class="floating-label-group">
+            <input asp-for="Input.Email" class="form-control floating-input" autocomplete="email" placeholder=" " />
+            <label asp-for="Input.Email" class="floating-label"></label>
+            <span asp-validation-for="Input.Email" class="text-danger"></span>
+        </div>
+        <div class="floating-label-group">
+            <input asp-for="Input.FirstName" class="form-control floating-input" autocomplete="given-name" placeholder=" " />
+            <label asp-for="Input.FirstName" class="floating-label"></label>
+            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+        </div>
+        <div class="floating-label-group">
+            <input asp-for="Input.LastName" class="form-control floating-input" autocomplete="family-name" placeholder=" " />
+            <label asp-for="Input.LastName" class="floating-label"></label>
+            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+        </div>
+        <button type="submit" class="w-100 btn btn-success">Đăng ký</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

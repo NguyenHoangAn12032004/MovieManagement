@@ -1,0 +1,701 @@
+@model IEnumerable<MovieManagement.Models.CartItem>
+
+@{
+    ViewData["Title"] = "Quản lý vé";
+}
+
+<style>
+    .ticket-management {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .management-header {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        border: 1px solid #e9ecef;
+    }
+    
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: #fff;
+        color: #333;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    }
+    
+    .ticket-table-container {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        border: 1px solid #e9ecef;
+    }
+    
+    .table-header {
+        background: #f8f9fa;
+        color: #333;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .modern-table {
+        margin: 0;
+        width: 100%;
+    }
+    
+    .modern-table th {
+        background: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .modern-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+    
+    .modern-table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .modern-table tbody tr:hover {
+        background: #f4f7fb;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .payment-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-modern {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .filter-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid #e9ecef;
+    }
+    
+    .search-box {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .search-box:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .btn-modern.btn-info {
+        background: linear-gradient(135deg, #36a2eb, #007bff);
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(54,162,235,0.15);
+        border: none;
+    }
+    .btn-modern.btn-success {
+        background: linear-gradient(135deg, #43e97b, #38f9d7);
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(67,233,123,0.15);
+        border: none;
+    }
+    .btn-modern.btn-danger {
+        background: linear-gradient(135deg, #ff5858, #f857a6);
+        color: #fff !important;
+        box-shadow: 0 2px 8px rgba(255,88,88,0.15);
+        border: none;
+    }
+    .btn-modern[disabled], .btn-modern:disabled {
+        opacity: 0.6;
+        filter: grayscale(0.2);
+        background: #ccc !important;
+        color: #fff !important;
+    }
+    
+    .btn-action-circle {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        padding: 0;
+        font-size: 1.25rem;
+    }
+    .btn-action-circle i {
+        color: #fff;
+        font-size: 1.2em;
+    }
+    
+    .action-btn-equal {
+        min-width: 120px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        padding: 0 16px;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="ticket-management">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="management-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-2">
+                        <i class="fas fa-ticket-alt text-primary"></i>
+                        Quản lý vé điện tử
+                    </h1>
+                    <p class="text-muted mb-0">Theo dõi và quản lý tất cả vé đã bán</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <form asp-action="AutoReleaseSeats" method="post" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Bạn có chắc chắn muốn tự động giải phóng tất cả ghế đã quá thời gian xử lý không?');">
+                                <i class="fas fa-unlock"></i> Giải phóng ghế
+                            </button>
+                        </form>
+                        <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                            <i class="fas fa-download"></i> Xuất Excel
+                        </button>
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stat-cards">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.Count()</h3>
+                        <p class="mb-0">Tổng số vé</p>
+                    </div>
+                    <i class="fas fa-ticket-alt fa-2x opacity-75"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.Count(x => x.Status == "Completed")</h3>
+                        <p class="mb-0">Đã thanh toán</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.Count(x => x.Status == "Pending")</h3>
+                        <p class="mb-0">Chờ thanh toán</p>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.Count(x => x.Status == "Processing")</h3>
+                        <p class="mb-0">Đang xử lý</p>
+                    </div>
+                    <i class="fas fa-spinner fa-2x opacity-75"></i>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-1">@Model.Where(x => x.Status == "Completed").Sum(x => x.TotalAmount).ToString("N0") đ</h3>
+                        <p class="mb-0">Tổng doanh thu</p>
+                    </div>
+                    <i class="fas fa-money-bill-wave fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Tìm kiếm</label>
+                    <input type="text" class="search-box" id="searchInput" placeholder="Tìm theo tên phim, email khách hàng...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Trạng thái</label>
+                    <select class="form-select search-box" id="statusFilter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Pending">Chờ thanh toán</option>
+                        <option value="Processing">Đang xử lý</option>
+                        <option value="Completed">Đã thanh toán</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Phương thức thanh toán</label>
+                    <select class="form-select search-box" id="paymentFilter">
+                        <option value="">Tất cả phương thức</option>
+                        <option value="Tiền mặt">Tiền mặt</option>
+                        <option value="MOMO">MOMO</option>
+                        <option value="VNPay">VNPay</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100 search-box" onclick="clearFilters()">
+                        <i class="fas fa-times"></i> Xóa bộ lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Table -->
+        <div class="ticket-table-container">
+            <div class="table-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-list"></i>
+                    Danh sách vé điện tử
+                </h4>
+            </div>
+            <div class="table-responsive">
+                <table class="modern-table" id="ticketTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Phim</th>
+                            <th>Suất chiếu</th>
+                            <th>Ghế</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Phương thức thanh toán</th>
+                            <th>Người dùng</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr data-movie="@(item.Showtime?.Movie?.Title ?? "N/A")" 
+                                data-status="@(item.Status ?? "")" 
+                                data-payment="@(item.PaymentMethod ?? "")"
+                                data-user="@(item.User?.Email ?? "")">
+                                <td>
+                                    <span class="fw-bold text-primary">#@item.Id</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-film text-primary me-2"></i>
+                                        <span class="fw-medium">@(item.Showtime?.Movie?.Title ?? "N/A")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <i class="fas fa-calendar text-info me-1"></i>
+                                        @(item.Showtime?.ShowDateTime.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-chair"></i> @(item.SeatNames ?? "N/A")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">@item.TotalAmount.ToString("N0") đ</span>
+                                </td>
+                                <td class="position-static">
+                                    <div class="dropdown">
+                                        <span class="status-badge 
+                                            @(item.Status == "Pending" ? "bg-warning text-dark" : 
+                                              item.Status == "Processing" ? "bg-info text-white" : 
+                                              item.Status == "Completed" && item.TransferredFromUserId != null ? "bg-primary text-white" : 
+                                              item.Status == "Completed" ? "bg-success text-white" : "bg-danger text-white") 
+                                            dropdown-toggle"
+                                            data-bs-toggle="dropdown" style="cursor:pointer;">
+                                            @if (item.Status == "Pending") { <i class="fas fa-clock"></i> } 
+                                            else if (item.Status == "Processing") { <i class="fas fa-spinner"></i> } 
+                                            else if (item.Status == "Completed" && item.TransferredFromUserId != null) { <i class="fas fa-exchange-alt"></i> }
+                                            else if (item.Status == "Completed") { <i class="fas fa-check-circle"></i> }
+                                            else { <i class="fas fa-exclamation-triangle"></i> }
+                                            @(item.Status == "Pending" ? " Chờ thanh toán" : 
+                                              item.Status == "Processing" ? " Đang xử lý" : 
+                                              item.Status == "Completed" && item.TransferredFromUserId != null ? " Đã chuyển" : 
+                                              item.Status == "Completed" ? " Đã thanh toán" : item.Status ?? "N/A")
+                                        </span>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <form asp-action="ChangeStatus" asp-route-id="@item.Id" asp-route-status="Pending" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <button class="dropdown-item" type="submit" onclick="event.stopPropagation();">Chờ thanh toán</button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="ChangeStatus" asp-route-id="@item.Id" asp-route-status="Processing" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <button class="dropdown-item" type="submit" onclick="event.stopPropagation();">Đang xử lý</button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="ChangeStatus" asp-route-id="@item.Id" asp-route-status="Completed" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <button class="dropdown-item" type="submit" onclick="event.stopPropagation();">Đã thanh toán</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.PaymentMethod))
+                                    {
+                                        @if (item.PaymentMethod == "Tiền mặt")
+                                        {
+                                            <span class="payment-badge bg-success text-white">
+                                                <i class="fas fa-money-bill"></i> Tiền mặt
+                                            </span>
+                                        }
+                                        else if (item.PaymentMethod == "MOMO")
+                                        {
+                                            <span class="payment-badge bg-danger text-white">
+                                                <i class="fab fa-cc-paypal"></i> MOMO
+                                            </span>
+                                        }
+                                        else if (item.PaymentMethod == "VNPay")
+                                        {
+                                            <span class="payment-badge bg-primary text-white">
+                                                <i class="fas fa-credit-card"></i> VNPay
+                                            </span>
+                                        }
+                                        else if (item.PaymentMethod == "Admin")
+                                        {
+                                            <span class="payment-badge bg-info text-white">
+                                                <i class="fas fa-user-shield"></i> Admin
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="payment-badge bg-secondary text-white">
+                                                <i class="fas fa-question"></i> @item.PaymentMethod
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.User != null)
+                                    {
+                                        <div>
+                                            <div class="fw-medium">
+                                                <i class="fas fa-user text-primary me-1"></i>
+                                                @(item.User.Email ?? "N/A")
+                                            </div>
+                                            @if (item.TransferredFromUserId != null && item.TransferredFromUser != null)
+                                            {
+                                                <div class="text-muted small mt-1">
+                                                    <i class="fas fa-exchange-alt text-info"></i> 
+                                                    Được chuyển từ: @(item.TransferredFromUser.Email ?? "N/A")
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="@Url.Action("Details", "Ticket", new { id = item.Id })"
+                                           class="btn btn-sm btn-primary fw-bold px-3 py-2 rounded action-btn-equal" data-bs-toggle="tooltip" title="Xem chi tiết">
+                                            <i class="fas fa-eye me-1"></i> Chi tiết
+                                        </a>
+                                        @if (item.Status == "Pending")
+                                        {
+                                            <form asp-action="AdminPayment" asp-route-cartItemId="@item.Id" asp-route-customerId="@item.UserId" asp-route-returnUrl="/Admin/Ticket" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded action-btn-equal" data-bs-toggle="tooltip" title="Xác nhận thanh toán" onclick="event.stopPropagation();">
+                                                    <i class="fas fa-check me-1"></i> Xác nhận
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (item.Status == "Processing")
+                                        {
+                                            <form asp-action="CancelPayment" asp-route-cartItemId="@item.Id" method="post" style="display: inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-warning fw-bold px-3 py-2 rounded action-btn-equal" data-bs-toggle="tooltip" title="Hủy thanh toán và giải phóng ghế" onclick="event.stopPropagation(); return confirm('Bạn có chắc chắn muốn hủy thanh toán và giải phóng ghế không?');">
+                                                    <i class="fas fa-times me-1"></i> Hủy
+                                                </button>
+                                            </form>
+                                        }
+                                        <form asp-action="DeleteTicket" asp-route-id="@item.Id" method="post"
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa vé này không?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger fw-bold px-3 py-2 rounded action-btn-equal" data-bs-toggle="tooltip" title="Xóa vé" onclick="event.stopPropagation();">
+                                                <i class="fas fa-trash me-1"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-ticket-alt fa-3x mb-3 opacity-50"></i>
+                                    <h5>Chưa có vé nào</h5>
+                                    <p>Danh sách vé sẽ hiển thị tại đây khi có khách hàng đặt vé</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none" 
+     style="background: rgba(255,255,255,0.9); z-index: 9999;">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="text-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+            <div class="mt-3">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script>
+        let ticketTable;
+        
+        $(document).ready(function() {
+            // Initialize DataTable
+            ticketTable = $('#ticketTable').DataTable({
+                "order": [[0, "desc"]],
+                "pageLength": 25,
+                "responsive": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Vietnamese.json"
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": -1 }
+                ],
+                "drawCallback": function(settings) {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                }
+            });
+
+            // Search functionality
+            $('#searchInput').on('keyup', function() {
+                filterTable();
+            });
+
+            $('#statusFilter, #paymentFilter').on('change', function() {
+                filterTable();
+            });
+
+            // Display messages
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                    showNotification('success', '@TempData["SuccessMessage"]');
+                </text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                    showNotification('error', '@TempData["ErrorMessage"]');
+                </text>
+            }
+
+            // Add hover effects
+            $('.modern-table tbody tr').hover(
+                function() { $(this).addClass('table-hover-effect'); },
+                function() { $(this).removeClass('table-hover-effect'); }
+            );
+        });
+
+        function filterTable() {
+            const searchTerm = $('#searchInput').val().toLowerCase();
+            const statusFilter = $('#statusFilter').val();
+            const paymentFilter = $('#paymentFilter').val();
+
+            $('#ticketTable tbody tr').each(function() {
+                const row = $(this);
+                const movieName = row.data('movie').toLowerCase();
+                const userEmail = row.data('user').toLowerCase();
+                const status = row.data('status');
+                const payment = row.data('payment');
+
+                const matchesSearch = movieName.includes(searchTerm) || userEmail.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+                const matchesPayment = !paymentFilter || payment === paymentFilter;
+
+                if (matchesSearch && matchesStatus && matchesPayment) {
+                    row.show();
+                } else {
+                    row.hide();
+                }
+            });
+        }
+
+        function clearFilters() {
+            $('#searchInput').val('');
+            $('#statusFilter').val('');
+            $('#paymentFilter').val('');
+            filterTable();
+            showNotification('info', 'Đã xóa tất cả bộ lọc');
+        }
+
+        function refreshData() {
+            showLoading();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        function exportToExcel() {
+            showLoading();
+            
+            const data = [];
+            const headers = ['ID', 'Phim', 'Suất chiếu', 'Ghế', 'Tổng tiền', 'Trạng thái', 'Phương thức thanh toán', 'Người dùng'];
+            data.push(headers);
+
+            $('#ticketTable tbody tr:visible').each(function() {
+                const row = [];
+                $(this).find('td').not(':last').each(function(index) {
+                    if (index === 0) {
+                        row.push($(this).text().replace('#', ''));
+                    } else {
+                        row.push($(this).text().trim());
+                    }
+                });
+                if (row.length > 0) data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Danh sách vé");
+            
+            const fileName = `Danh_sach_ve_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            hideLoading();
+            showNotification('success', 'Đã xuất file Excel thành công!');
+        }
+
+        function showLoading() {
+            $('#loadingOverlay').removeClass('d-none');
+        }
+
+        function hideLoading() {
+            $('#loadingOverlay').addClass('d-none');
+        }
+
+        function showNotification(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 'alert-info';
+            
+            const notification = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 10000; min-width: 300px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            $('body').append(notification);
+            
+            setTimeout(() => {
+                $('.alert').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+        $(function () {
+          $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

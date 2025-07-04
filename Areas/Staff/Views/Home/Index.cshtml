@@ -1,0 +1,230 @@
+@{
+    ViewData["Title"] = "Dashboard Nhân viên";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-1">Dashboard Nhân viên</h1>
+                <small class="text-muted">Chào mừng bạn đến với khu vực làm việc</small>
+            </div>
+            <div class="text-end">
+                <small class="text-muted d-block">Hôm nay</small>
+                <strong>@DateTime.Now.ToString("dd/MM/yyyy")</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-info border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1 fw-bold">@ViewBag.TodayTickets</h4>
+                        <p class="card-text mb-0 opacity-75">Vé bán hôm nay</p>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="bi bi-ticket-perforated" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1 fw-bold">@ViewBag.TodayRevenue.ToString("C0")</h4>
+                        <p class="card-text mb-0 opacity-75">Doanh thu hôm nay</p>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="bi bi-cash-stack" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-1 fw-bold">@ViewBag.PendingTickets</h4>
+                        <p class="card-text mb-0 opacity-75">Vé chờ xử lý</p>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="bi bi-clock-history" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Welcome Message -->
+@if (ViewBag.StaffInfo != null)
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-circle me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h5 class="mb-0">Chào mừng, @ViewBag.StaffInfo.FullName!</h5>
+                            <small class="opacity-75">@ViewBag.StaffInfo.Position</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-envelope text-primary me-2"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Email</small>
+                                            <span>@ViewBag.StaffInfo.Email</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-telephone text-success me-2"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Số điện thoại</small>
+                                            <span>@ViewBag.StaffInfo.PhoneNumber</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-briefcase text-info me-2"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Chức vụ</small>
+                                            <span>@ViewBag.StaffInfo.Position</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-currency-dollar text-warning me-2"></i>
+                                        <div>
+                                            <small class="text-muted d-block">Lương theo giờ</small>
+                                            <span class="fw-bold">@ViewBag.StaffInfo.HourlyRate.ToString("C0")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning border-0 shadow-sm">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Không tìm thấy thông tin nhân viên</strong>
+                        <p class="mb-0">Vui lòng liên hệ quản trị viên để được hỗ trợ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning-charge text-primary me-2"></i>
+                    Thao tác nhanh
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Index", "Ticket")" class="btn btn-primary btn-lg w-100 shadow-sm">
+                            <i class="bi bi-ticket-perforated me-2"></i>
+                            <div>
+                                <div class="fw-bold">Xử lý vé</div>
+                                <small class="opacity-75">Quản lý đặt vé</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Profile")" class="btn btn-info btn-lg w-100 shadow-sm">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <div>
+                                <div class="fw-bold">Hồ sơ cá nhân</div>
+                                <small class="opacity-75">Xem thông tin</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Schedule")" class="btn btn-success btn-lg w-100 shadow-sm">
+                            <i class="bi bi-calendar-week me-2"></i>
+                            <div>
+                                <div class="fw-bold">Lịch làm việc</div>
+                                <small class="opacity-75">Xem ca làm việc</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Index", "Home", new { area = "" })" class="btn btn-secondary btn-lg w-100 shadow-sm">
+                            <i class="bi bi-house-door me-2"></i>
+                            <div>
+                                <div class="fw-bold">Trang chủ</div>
+                                <small class="opacity-75">Về trang chính</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-lg {
+        padding: 1rem;
+        text-align: left;
+    }
+    
+    .btn-lg i {
+        font-size: 1.5rem;
+        vertical-align: middle;
+    }
+    
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        transition: all 0.2s ease-in-out;
+    }
+</style>

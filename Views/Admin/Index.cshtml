@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Movie Management</h2>
+                    
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    
+                    <div class="card bg-light p-3 mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Quản lý dữ liệu phim</h5>
+                            <p class="card-text">Chức năng nhập phim từ TMDb API không còn được hỗ trợ. Vui lòng sử dụng các công cụ SQL hoặc giao diện quản trị để quản lý dữ liệu phim.</p>
+                            <a href="/SQL" class="btn btn-primary">
+                                <i class="fas fa-database me-2"></i>Quản lý dữ liệu SQL
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Ẩn nút import phim từ TMDb
+                    <div class="d-flex gap-3">
+                        <form asp-action="ImportMovies" method="post">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i>Import Movies from TMDb
+                            </button>
+                        </form>
+                    </div>
+                    -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

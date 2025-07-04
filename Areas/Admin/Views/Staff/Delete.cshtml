@@ -1,0 +1,104 @@
+@model MovieManagement.Models.Staff
+
+@{
+    ViewData["Title"] = "Xóa nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        .delete-staff-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2.5rem 2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .delete-staff-card h2 {
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .delete-list dt {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05rem;
+        }
+        .delete-list dd {
+            color: #198754;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ff5858, #f09819);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 2.2rem;
+            border-radius: 8px;
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #f09819, #ff5858);
+        }
+        .btn-outline-secondary {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.6rem 2.2rem;
+        }
+        .delete-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="delete-staff-card">
+                <h2 class="mb-4"><i class="fas fa-user-times me-2"></i>Bạn có chắc chắn muốn xóa nhân viên này?</h2>
+                <div>
+                    <dl class="row delete-list">
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Id)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Id)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FullName)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.FullName)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Email)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PhoneNumber)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.PhoneNumber)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Position)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Position)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Gender)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Gender)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.BirthDate)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.BirthDate)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.HourlyRate)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.HourlyRate)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Bonus)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Bonus)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Penalty)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Penalty)</dd>
+                    </dl>
+
+                    <form asp-action="Delete" method="post" class="delete-actions mt-4">
+                        <input type="hidden" asp-for="Id" />
+                        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                        <input type="submit" value="Xóa" class="btn btn-danger" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

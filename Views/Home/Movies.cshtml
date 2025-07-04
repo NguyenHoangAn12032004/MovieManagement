@@ -1,0 +1,40 @@
+@model List<MovieManagement.Models.Movie>
+
+@{
+    ViewData["Title"] = "Danh sách phim";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" class="form-inline">
+                <div class="form-group mr-2">
+                    <input type="text" name="searchTerm" class="form-control" placeholder="Tìm kiếm..." value="@Context.Request.Query["searchTerm"]">
+                </div>
+                <div class="form-group mr-2">
+                    <input type="text" name="genre" class="form-control" placeholder="Thể loại..." value="@Context.Request.Query["genre"]">
+                </div>
+                <div class="form-group mr-2">
+                    <input type="text" name="language" class="form-control" placeholder="Ngôn ngữ..." value="@Context.Request.Query["language"]">
+                </div>
+                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var movie in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <img src="@movie.PosterPath" class="card-img-top" alt="@movie.Title">
+                    <div class="card-body">
+                        <h5 class="card-title">@movie.Title</h5>
+                        <p class="card-text">@movie.Overview</p>
+                        <a href="@Url.Action("MovieDetails", new { id = movie.Id })" class="btn btn-primary">Chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div> 

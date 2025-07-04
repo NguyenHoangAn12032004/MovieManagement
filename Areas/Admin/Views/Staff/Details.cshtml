@@ -1,0 +1,108 @@
+@model MovieManagement.Models.Staff
+
+@{
+    ViewData["Title"] = "Chi tiết nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        .details-staff-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2.5rem 2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .details-staff-card h2 {
+            font-weight: bold;
+            color: #198754;
+        }
+        .details-list dt {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05rem;
+        }
+        .details-list dd {
+            color: #198754;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 2.2rem;
+            border-radius: 8px;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #38f9d7, #43e97b);
+        }
+        .btn-outline-secondary {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.6rem 2.2rem;
+        }
+        .details-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="details-staff-card">
+                <h2 class="mb-4"><i class="fas fa-user me-2"></i>Chi tiết nhân viên</h2>
+                <div>
+                    <dl class="row details-list">
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Id)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Id)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.FullName)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.FullName)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Email)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PhoneNumber)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.PhoneNumber)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Position)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Position)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Gender)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Gender)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.BirthDate)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.BirthDate)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.HourlyRate)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.HourlyRate)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Bonus)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Bonus)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Penalty)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.Penalty)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.CreatedAt)</dd>
+
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.UpdatedAt)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(model => model.UpdatedAt)</dd>
+                    </dl>
+                    <div class="details-actions mt-4">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-success"><i class="fas fa-edit me-1"></i> Chỉnh sửa</a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

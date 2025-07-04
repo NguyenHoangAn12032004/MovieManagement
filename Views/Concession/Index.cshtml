@@ -1,0 +1,285 @@
+@model ConcessionViewModel
+@{
+    ViewData["Title"] = "Bắp nước & Đồ ăn";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/concession.css" />
+}
+
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between">
+                <h2 class="mb-0"><i class="fas fa-utensils me-3"></i>Bắp nước & Đồ ăn</h2>
+                @if (Model.IsComboWithTicket)
+                {
+                    <div class="alert alert-success mb-0 px-4 py-2">
+                        <i class="fas fa-tags me-2"></i>Mua kèm vé - Giảm 5%
+                    </div>
+                }
+            </div>
+            <p class="text-muted mt-2">Thưởng thức trọn vẹn bộ phim yêu thích với những món ngon đặc biệt từ chúng tôi!</p>
+        </div>
+    </div>
+
+    <form id="concessionForm" method="post" asp-action="AddToCart">
+        @if (Model.ShowtimeId.HasValue && !string.IsNullOrEmpty(Model.SelectedSeats))
+        {
+            <input type="hidden" name="showtimeId" value="@Model.ShowtimeId" />
+            <input type="hidden" name="selectedSeats" value="@Model.SelectedSeats" />
+        }
+
+        <div class="row">
+            <!-- Food section -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-hamburger me-2"></i>Đồ ăn</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.Foods.Any())
+                        {
+                            <div class="alert alert-light text-center">
+                                Không có sản phẩm
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="food-item-container">
+                                @foreach (var food in Model.Foods)
+                                {
+                                    <div class="card mb-3 concession-card">
+                                        <div class="card-body">
+                                            <div class="row g-0">
+                                                <div class="col-auto">
+                                                    @if (!string.IsNullOrEmpty(food.ImagePath))
+                                                    {
+                                                        <img src="@food.ImagePath" class="concession-image rounded" alt="@food.Name">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="concession-image-placeholder rounded">
+                                                            <i class="fas fa-hamburger fa-2x"></i>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="col">
+                                                    <div class="ms-3">
+                                                        <h5 class="card-title mb-1">@food.Name</h5>
+                                                        <p class="card-text small text-muted mb-2">@food.Description</p>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <div class="price">
+                                                                <span class="fw-bold">@food.Price.ToString("N0") đ</span>
+                                                            </div>
+                                                            <div class="quantity-control">
+                                                                <div class="input-group input-group-sm">
+                                                                    <button type="button" class="btn btn-outline-primary btn-decrease">-</button>
+                                                                    <input type="number" name="quantities" value="0" min="0" max="10" class="form-control text-center quantity-input" 
+                                                                           data-id="@food.Id" data-name="@food.Name" data-price="@food.Price">
+                                                                    <input type="hidden" name="itemIds" value="@food.Id" class="item-id-input">
+                                                                    <button type="button" class="btn btn-outline-primary btn-increase">+</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drink section -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="fas fa-glass-cheers me-2"></i>Đồ uống</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.Drinks.Any())
+                        {
+                            <div class="alert alert-light text-center">
+                                Không có sản phẩm
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="drink-item-container">
+                                @foreach (var drink in Model.Drinks)
+                                {
+                                    <div class="card mb-3 concession-card">
+                                        <div class="card-body">
+                                            <div class="row g-0">
+                                                <div class="col-auto">
+                                                    @if (!string.IsNullOrEmpty(drink.ImagePath))
+                                                    {
+                                                        <img src="@drink.ImagePath" class="concession-image rounded" alt="@drink.Name">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="concession-image-placeholder rounded">
+                                                            <i class="fas fa-glass-cheers fa-2x"></i>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="col">
+                                                    <div class="ms-3">
+                                                        <h5 class="card-title mb-1">@drink.Name</h5>
+                                                        <p class="card-text small text-muted mb-2">@drink.Description</p>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <div class="price">
+                                                                <span class="fw-bold">@drink.Price.ToString("N0") đ</span>
+                                                            </div>
+                                                            <div class="quantity-control">
+                                                                <div class="input-group input-group-sm">
+                                                                    <button type="button" class="btn btn-outline-info btn-decrease">-</button>
+                                                                    <input type="number" name="quantities" value="0" min="0" max="10" class="form-control text-center quantity-input" 
+                                                                           data-id="@drink.Id" data-name="@drink.Name" data-price="@drink.Price">
+                                                                    <input type="hidden" name="itemIds" value="@drink.Id" class="item-id-input">
+                                                                    <button type="button" class="btn btn-outline-info btn-increase">+</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combo section -->
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0"><i class="fas fa-box me-2"></i>Combo</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.Combos.Any())
+                        {
+                            <div class="alert alert-light text-center">
+                                Không có sản phẩm
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="combo-item-container">
+                                @foreach (var combo in Model.Combos)
+                                {
+                                    <div class="card mb-3 concession-card">
+                                        <div class="card-body">
+                                            <div class="row g-0">
+                                                <div class="col-auto">
+                                                    @if (!string.IsNullOrEmpty(combo.ImagePath))
+                                                    {
+                                                        <img src="@combo.ImagePath" class="concession-image rounded" alt="@combo.Name">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="concession-image-placeholder rounded">
+                                                            <i class="fas fa-box fa-2x"></i>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="col">
+                                                    <div class="ms-3">
+                                                        <h5 class="card-title mb-1">@combo.Name</h5>
+                                                        <p class="card-text small text-muted mb-2">@combo.Description</p>
+                                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                                            <div class="price">
+                                                                <span class="fw-bold">@combo.Price.ToString("N0") đ</span>
+                                                            </div>
+                                                            <div class="quantity-control">
+                                                                <div class="input-group input-group-sm">
+                                                                    <button type="button" class="btn btn-outline-warning btn-decrease">-</button>
+                                                                    <input type="number" name="quantities" value="0" min="0" max="10" class="form-control text-center quantity-input" 
+                                                                           data-id="@combo.Id" data-name="@combo.Name" data-price="@combo.Price">
+                                                                    <input type="hidden" name="itemIds" value="@combo.Id" class="item-id-input">
+                                                                    <button type="button" class="btn btn-outline-warning btn-increase">+</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order summary -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng của bạn</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table" id="cartTable">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th class="text-center">Số lượng</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartItemsList">
+                                    <tr id="emptyCart">
+                                        <td colspan="4" class="text-center text-muted py-4">Chưa có sản phẩm nào được chọn</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr id="subtotalRow" class="d-none">
+                                        <td colspan="3" class="text-end"><strong>Tạm tính:</strong></td>
+                                        <td class="text-end"><strong id="subtotal">0 đ</strong></td>
+                                    </tr>
+                                    @if (Model.IsComboWithTicket)
+                                    {
+                                        <tr id="discountRow" class="d-none">
+                                            <td colspan="3" class="text-end text-success"><strong>Giảm giá (5%):</strong></td>
+                                            <td class="text-end text-success"><strong id="discount">0 đ</strong></td>
+                                        </tr>
+                                    }
+                                    <tr id="totalRow" class="d-none">
+                                        <td colspan="3" class="text-end fs-5"><strong>Tổng cộng:</strong></td>
+                                        <td class="text-end fs-5"><strong id="total">0 đ</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="@Model.ReturnUrl" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" id="orderButton" class="btn btn-primary" disabled>
+                                <i class="fas fa-shopping-cart me-2"></i>Thêm vào giỏ hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/concession.js"></script>
+}

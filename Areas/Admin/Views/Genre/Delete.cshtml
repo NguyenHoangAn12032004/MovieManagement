@@ -1,0 +1,37 @@
+@model MovieManagement.Models.Genre
+
+@{
+    ViewData["Title"] = "Xóa thể loại phim";
+}
+
+<div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">Xác nhận xóa thể loại phim</h4>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Bạn có chắc chắn muốn xóa thể loại phim này? Hành động này không thể hoàn tác.
+        </div>
+        
+        <dl class="row mt-4">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            
+            <dt class="col-sm-3">Tên thể loại</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+        </dl>
+        
+        <form asp-action="Delete" class="mt-4">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash me-1"></i> Xác nhận xóa
+                </button>
+            </div>
+        </form>
+    </div>
+</div> 

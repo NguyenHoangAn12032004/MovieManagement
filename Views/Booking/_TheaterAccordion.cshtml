@@ -1,0 +1,38 @@
+@model List<MovieManagement.Models.Theater>
+@{
+    var movieId = ViewBag.MovieId as int?;
+}
+<style>
+    .theater-btn-block {
+        min-width: 180px;
+        margin-bottom: 1rem;
+    }
+    .theater-btn-block .theater-btn.active {
+        background: #1565c0;
+        color: #fff;
+        border: 2px solid #1565c0;
+        box-shadow: 0 2px 8px rgba(21,101,192,0.15);
+    }
+    .showtimes-container {
+        display: none;
+        position: static !important;
+        margin-top: 10px;
+        width: 100%;
+        z-index: 1;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px 0 0 0;
+        box-shadow: 0 2px 8px rgba(21,101,192,0.08);
+    }
+</style>
+<div class="d-flex gap-3 flex-wrap justify-content-center align-items-start" id="theater-btn-row">
+    @foreach (var theater in Model)
+    {
+        <div class="theater-btn-block text-center">
+            <button type="button" class="btn btn-primary theater-btn mb-2" data-theater-id="@theater.Id" data-movie-id="@movieId">
+                @theater.Name
+            </button>
+            <div class="showtimes-container" id="showtimes-container-@theater.Id"></div>
+        </div>
+    }
+</div> 

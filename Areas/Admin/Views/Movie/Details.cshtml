@@ -1,0 +1,146 @@
+@model MovieManagement.Models.Movie
+
+@{
+    ViewData["Title"] = "Chi tiết phim";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4 mb-4">Chi tiết phim</h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info bg-opacity-25">
+            <h4 class="mb-0">@Model.Title</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    @if (!string.IsNullOrEmpty(Model.PosterPath))
+                    {
+                        <img src="@Model.PosterPath" alt="@Model.Title" class="img-fluid rounded mb-3" style="max-width: 100%;">
+                    }
+                    else
+                    {
+                        <div class="card bg-light mb-3">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-film" style="font-size: 3rem;"></i>
+                                <p class="mt-3">Không có ảnh</p>
+                            </div>
+                        </div>
+                    }
+
+                    <h5 class="mt-4">Trạng thái</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Nổi bật
+                            <span class="badge rounded-pill @(Model.IsFeatured ? "bg-success" : "bg-secondary")">
+                                @(Model.IsFeatured ? "Có" : "Không")
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Đang chiếu
+                            <span class="badge rounded-pill @(Model.IsNowShowing ? "bg-success" : "bg-secondary")">
+                                @(Model.IsNowShowing ? "Có" : "Không")
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Sắp chiếu
+                            <span class="badge rounded-pill @(Model.IsComingSoon ? "bg-success" : "bg-secondary")">
+                                @(Model.IsComingSoon ? "Có" : "Không")
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Trạng thái
+                            <span class="badge rounded-pill @(Model.Status == "Active" ? "bg-success" : "bg-danger")">
+                                @(Model.Status == "Active" ? "Đang hoạt động" : "Ngừng hoạt động")
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-8">
+                    <dl class="row">
+                        <dt class="col-sm-4">ID</dt>
+                        <dd class="col-sm-8">@Model.Id</dd>
+                        
+                        <dt class="col-sm-4">Tiêu đề</dt>
+                        <dd class="col-sm-8">@Model.Title</dd>
+                        
+                        <dt class="col-sm-4">Thể loại</dt>
+                        <dd class="col-sm-8">@(Model.Genre?.Name ?? "Chưa phân loại")</dd>
+                        
+                        <dt class="col-sm-4">Ngày phát hành</dt>
+                        <dd class="col-sm-8">@Model.ReleaseDate.ToString("dd/MM/yyyy")</dd>
+                        
+                        <dt class="col-sm-4">Thời lượng</dt>
+                        <dd class="col-sm-8">@Model.Duration phút</dd>
+                        
+                        <dt class="col-sm-4">Ngôn ngữ</dt>
+                        <dd class="col-sm-8">@Model.Language</dd>
+                        
+                        <dt class="col-sm-4">Đạo diễn</dt>
+                        <dd class="col-sm-8">@Model.Director</dd>
+                        
+                        <dt class="col-sm-4">Đánh giá trung bình</dt>
+                        <dd class="col-sm-8">
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">@Model.VoteAverage</span>
+                                <div class="text-warning">
+                                    @for (int i = 0; i < Math.Floor(Model.VoteAverage / 2); i++)
+                                    {
+                                        <i class="bi bi-star-fill"></i>
+                                    }
+                                    @if (Model.VoteAverage / 2 % 1 >= 0.5)
+                                    {
+                                        <i class="bi bi-star-half"></i>
+                                    }
+                                    @for (int i = 0; i < 5 - Math.Ceiling(Model.VoteAverage / 2); i++)
+                                    {
+                                        <i class="bi bi-star"></i>
+                                    }
+                                </div>
+                            </div>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Ngày tạo</dt>
+                        <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                        
+                        <dt class="col-sm-4">Cập nhật lần cuối</dt>
+                        <dd class="col-sm-8">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+                    </dl>
+                    
+                    <hr />
+                    
+                    <h5>Tóm tắt</h5>
+                    <p>@Model.Overview</p>
+                    
+                    <h5>Diễn viên</h5>
+                    <p>@Model.Cast</p>
+                    
+                    @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                    {
+                        <h5>Trailer</h5>
+                        <div class="ratio ratio-16x9 mb-3">
+                            <iframe src="@Model.TrailerUrl" title="@Model.Title trailer" allowfullscreen></iframe>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="bi bi-pencil me-1"></i> Chỉnh sửa
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger ms-2">
+                        <i class="bi bi-trash me-1"></i> Xóa
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,255 @@
+﻿@model Booking
+@using MovieManagement.Models
+
+@{
+    ViewData["Title"] = "Chi tiết đặt vé";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["Success"]
+                        </div>
+                    }
+
+                    <div class="text-center mb-4">
+                        <div class="booking-status @(Model.Status == "Completed" ? "bg-success text-white" : (Model.Status == "Confirmed" ? "text-success" : (Model.Status == "Processing" ? "text-info" : "text-warning")))">
+                            <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                            <h4>
+                                @if (Model.Status == "Processing")
+                                {
+                                    <span>Đang xử lý</span>
+                                }
+                                else if (Model.Status == "Confirmed")
+                                {
+                                    <span>Đặt vé thành công!</span>
+                                }
+                                else if (Model.Status == "Completed")
+                                {
+                                    <span>Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span>@Model.Status</span>
+                                }
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div class="booking-details">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="detail-group">
+                                    <label class="text-muted">Thời gian đặt</label>
+                                    <p class="h5">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-group">
+                                    <label class="text-muted">Thời gian chiếu</label>
+                                    <p class="h5">@Model.BookingTime.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="text-muted">Rạp</label>
+                                    <p class="h5">@ViewBag.TheaterName</p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="text-muted">Ghế đã chọn</label>
+                                    <p class="h5">
+                                        @string.Join(", ", Model.BookingSeats.Select(bs => $"{bs.Seat.Row}{bs.Seat.Number}"))
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="text-muted">Tổng tiền ghế</label>
+                                    <p class="h5 text-success">@(((decimal?)ViewBag.SeatTotal)?.ToString("N0") ?? "0") VNĐ</p>
+                                </div>
+                            </div>
+                            
+                            @{
+                                var concessionItems = ViewBag.ConcessionItems as List<ConcessionItem>;
+                            }
+                            
+                            @if (concessionItems != null && concessionItems.Any())
+                            {
+                                <div class="col-12">
+                                    <div class="detail-group">
+                                        <label class="text-muted">Bắp nước & Đồ ăn</label>
+                                        <div class="concession-items">
+                                            @foreach (var item in concessionItems)
+                                            {
+                                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                                    <div>
+                                                        <span class="fw-medium">@item.Concession.Name</span>
+                                                        <span class="text-muted">x @item.Quantity</span>
+                                                        @if (item.Discount > 0)
+                                                        {
+                                                            <span class="badge bg-success ms-2">-@item.Discount.ToString("N0")đ</span>
+                                                        }
+                                                    </div>
+                                                    <div class="text-end">
+                                                        @if (item.Discount > 0)
+                                                        {
+                                                            <div>
+                                                                <span class="text-decoration-line-through text-muted small">@((item.Price * item.Quantity).ToString("N0"))đ</span>
+                                                            </div>
+                                                            <span class="fw-bold">@((item.Price * item.Quantity - item.Discount).ToString("N0"))đ</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="fw-bold">@((item.Price * item.Quantity).ToString("N0"))đ</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="text-muted">Tổng tiền</label>
+                                    <p class="h4 text-primary">@Model.TotalAmount.ToString("N0") VNĐ</p>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="text-muted">Trạng thái</label>
+                                    <p class="h5">
+                                        @if (Model.Status == "Pending")
+                                        {
+                                            <span class="badge bg-warning">Chờ thanh toán</span>
+                                        }
+                                        else if (Model.Status == "Processing")
+                                        {
+                                            <span class="badge bg-info">Đang xử lý</span>
+                                        }
+                                        else if (Model.Status == "Completed")
+                                        {
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                        }
+                                        else if (Model.Status == "Confirmed")
+                                        {
+                                            <span class="badge bg-success">Đặt vé thành công!</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">@Model.Status</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Về trang chủ
+                        </a>
+                        @if (Model.Status == "Completed" || Model.Status == "Paid")
+                        {
+                            <button class="btn btn-success ms-2" id="btnPrintTicket" type="button" data-bs-toggle="modal" data-bs-target="#printTicketModal">
+                                <i class="fas fa-print me-2"></i>In vé
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal hiển thị QR và nút tải PDF -->
+<div class="modal fade" id="printTicketModal" tabindex="-1" aria-labelledby="printTicketModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="printTicketModalLabel">Vé điện tử</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="mb-3">
+            <img src="@Url.Action("QrCode", "Booking", new { bookingId = Model.Id })" alt="QR Code" style="width:200px;height:200px;" />
+        </div>
+        <p class="mt-3">Quét mã QR này tại rạp để check-in</p>
+        <button class="btn btn-primary" id="btnDownloadPdf">
+            <i class="fas fa-file-pdf me-2"></i>Tải vé PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Styles {
+    <style>
+        .detail-group {
+            margin-bottom: 1rem;
+        }
+
+            .detail-group label {
+                font-size: 0.875rem;
+                margin-bottom: 0.25rem;
+                display: block;
+            }
+
+            .detail-group p {
+                margin-bottom: 0;
+            }
+
+        .booking-status {
+            padding: 2rem;
+            border-radius: 0.5rem;
+            background-color: #f8f9fa;
+        }
+
+            .booking-status i {
+                display: block;
+                margin-bottom: 1rem;
+            }        .badge {
+            font-size: 0.875rem;
+            padding: 0.5em 1em;
+        }
+
+        .concession-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .concession-items .bg-light {
+            border: 1px solid #dee2e6;
+        }
+
+        .concession-items .text-decoration-line-through {
+            font-size: 0.875rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        // Sinh mã QR khi mở modal
+        document.getElementById('printTicketModal').addEventListener('show.bs.modal', function () {
+            var qr = new QRious({
+                element: document.getElementById('qrcode'),
+                value: '@Model.Id', // Có thể thay bằng mã vé hoặc link check-in
+                size: 200
+            });
+        });
+        // Xử lý tải PDF (cần backend hỗ trợ)
+        document.getElementById('btnDownloadPdf').onclick = function() {
+            window.location.href = '/Booking/DownloadTicketPdf?id=@Model.Id';
+        };
+    </script>
+}

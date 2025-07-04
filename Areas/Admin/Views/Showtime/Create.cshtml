@@ -1,0 +1,75 @@
+@model MovieManagement.Models.Showtime
+
+@{
+    ViewData["Title"] = "Thêm mới lịch chiếu";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Thêm mới lịch chiếu</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-plus mr-1"></i>
+            Thêm lịch chiếu mới
+        </div>
+        <div class="card-body">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="form-group">
+                    <label asp-for="MovieId" class="control-label">Phim</label>
+                    <select asp-for="MovieId" class="form-control" asp-items="ViewBag.MovieId"></select>
+                    <span asp-validation-for="MovieId" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="ShowDateTime" class="control-label">Ngày chiếu</label>
+                    <input asp-for="ShowDateTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="ShowDateTime" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="ScreenType" class="control-label">Loại màn hình</label>
+                    <select asp-for="ScreenType" class="form-control">
+                        <option value="2D">2D</option>
+                        <option value="3D">3D</option>
+                        <option value="IMAX">IMAX</option>
+                    </select>
+                    <span asp-validation-for="ScreenType" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Price" class="control-label">Giá vé</label>
+                    <input asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="TheaterId" class="control-label">Phòng chiếu</label>
+                    <select asp-for="TheaterId" class="form-control" asp-items="ViewBag.TheaterId"></select>
+                    <span asp-validation-for="TheaterId" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="AvailableSeats" class="control-label">Số ghế trống</label>
+                    <input asp-for="AvailableSeats" class="form-control" />
+                    <span asp-validation-for="AvailableSeats" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Trở về
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

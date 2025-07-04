@@ -1,0 +1,123 @@
+@model MovieManagement.Models.CartItem
+
+@{
+    ViewData["Title"] = "Chi tiết vé";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">Chi tiết vé #@Model.Id</h1>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Thông tin vé</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Mã vé:</strong> #@Model.Id</p>
+                        <p><strong>Khách hàng:</strong> @Model.User?.Email</p>
+                        <p><strong>Phim:</strong> @Model.Showtime?.Movie?.Title</p>
+                        <p><strong>Suất chiếu:</strong> @Model.Showtime?.ShowDateTime.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Ghế:</strong> @Model.SeatNames</p>
+                        <p><strong>Tổng tiền:</strong> @Model.TotalAmount.ToString("C0")</p>
+                        <p><strong>Trạng thái:</strong> 
+                            @switch (Model.Status)
+                            {
+                                case "Pending":
+                                    <span class="badge bg-warning">Chờ thanh toán</span>
+                                    break;
+                                case "Processing":
+                                    <span class="badge bg-info">Đang xử lý</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.Status</span>
+                                    break;
+                            }
+                        </p>
+                        <p><strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.ConcessionItems != null && Model.ConcessionItems.Any())
+        {
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Đồ ăn, nước uống</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Tên</th>
+                                    <th>Giá</th>
+                                    <th>Số lượng</th>
+                                    <th>Giảm giá</th>
+                                    <th>Tổng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ConcessionItems)
+                                {
+                                    <tr>
+                                        <td>@item.Concession?.Name</td>
+                                        <td>@item.Price.ToString("C0")</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.Discount.ToString("C0")</td>
+                                        <td>@item.TotalPrice.ToString("C0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Thao tác</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Status == "Pending" || Model.Status == "Processing")
+                {
+                    <form asp-action="ConfirmPayment" asp-route-id="@Model.Id" method="post" class="mb-2">
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Xác nhận thanh toán cho vé này?')">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Xác nhận thanh toán
+                        </button>
+                    </form>
+                    <form asp-action="CancelTicket" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Hủy vé này?')">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Hủy vé
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        Vé này đã được xử lý.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

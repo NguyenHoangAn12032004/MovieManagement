@@ -1,0 +1,213 @@
+@model MovieManagement.Models.CartItem
+
+@{
+    ViewData["Title"] = "Chi tiết vé";
+    var seats = ViewBag.Seats as List<MovieManagement.Models.Seat>;
+}
+
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Chi tiết vé #@Model.Id</h5>
+        <a asp-action="Index" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="mb-0">Thông tin vé</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="fw-bold">ID vé:</label>
+                            <p>@Model.Id</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Trạng thái:</label>
+                            <p>
+                                @if (Model.Status == "Pending")
+                                {
+                                    <span class="badge bg-warning">Chờ thanh toán</span>
+                                }
+                                else if (Model.Status == "Processing")
+                                {
+                                    <span class="badge bg-info">Đang xử lý</span>
+                                }
+                                else if (Model.Status == "Completed")
+                                {
+                                    <span class="badge bg-success">Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">@Model.Status</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Phương thức thanh toán:</label>
+                            <p>
+                                @if (!string.IsNullOrEmpty(Model.PaymentMethod))
+                                {
+                                    <span class="badge bg-primary">@Model.PaymentMethod</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Tổng tiền:</label>
+                            <p class="text-primary fw-bold">@Model.TotalAmount.ToString("N0") đ</p>
+                        </div>
+                        <div class="mb-0">
+                            <label class="fw-bold">Ngày tạo:</label>
+                            <p>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="mb-0">Thông tin người dùng</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="fw-bold">Tên đăng nhập:</label>
+                            <p>@Model.User.UserName</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Email:</label>
+                            <p>@Model.User.Email</p>
+                        </div>
+                        <div class="mb-0">
+                            <label class="fw-bold">Số điện thoại:</label>
+                            <p>@(string.IsNullOrEmpty(Model.User.PhoneNumber) ? "Không có" : Model.User.PhoneNumber)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="mb-0">Thông tin phim và suất chiếu</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="fw-bold">Phim:</label>
+                                    <p>@Model.Showtime.Movie.Title</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="fw-bold">Thời lượng:</label>
+                                    <p>@Model.Showtime.Movie.Runtime phút</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="fw-bold">Suất chiếu:</label>
+                                    <p>@Model.Showtime.ShowDateTime.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="fw-bold">Rạp:</label>
+                                    <p>@(Model.Showtime.Theater?.Name ?? "Không có thông tin")</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <img src="@Model.Showtime.Movie.PosterPath" alt="@Model.Showtime.Movie.Title" 
+                                     class="img-fluid rounded" style="max-height: 150px;" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary bg-opacity-10">
+                        <h6 class="mb-0">Thông tin ghế</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ghế</th>
+                                        <th>Loại ghế</th>
+                                        <th>Giá</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (seats != null && seats.Any())
+                                    {
+                                        foreach (var seat in seats)
+                                        {
+                                            <tr>
+                                                <td>@seat.Row@seat.Number</td>
+                                                <td>
+                                                    @switch (seat.Type)
+                                                    {
+                                                        case "Standard":
+                                                            <span class="badge bg-secondary">Thường</span>
+                                                            break;
+                                                        case "VIP":
+                                                            <span class="badge bg-warning">VIP</span>
+                                                            break;
+                                                        case "Couple":
+                                                            <span class="badge bg-danger">Ghế đôi</span>
+                                                            break;
+                                                        default:
+                                                            <span>@seat.Type</span>
+                                                            break;
+                                                    }
+                                                </td>
+                                                <td>@seat.Price.ToString("N0") đ</td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="3" class="text-center">Không có thông tin ghế</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" class="text-end fw-bold">Tổng cộng:</td>
+                                        <td class="fw-bold text-primary">@Model.TotalAmount.ToString("N0") đ</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Status == "Processing")
+        {
+            <div class="mt-4 text-end">
+                <form asp-action="ConfirmPayment" asp-route-id="@Model.Id" method="post" 
+                      class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xác nhận thanh toán vé này?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                </form>
+                <a asp-action="Index" class="btn btn-secondary ms-2">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        }
+    </div>
+</div> 

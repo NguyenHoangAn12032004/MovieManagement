@@ -1,0 +1,149 @@
+@{
+    ViewData["Title"] = "Dashboard Admin - Test Simple";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard Test - Simple Charts</h1>
+    </div>
+
+    <!-- Simple Charts Row -->
+    <div class="row">
+        <!-- Revenue Chart -->
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Revenue Chart</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movie Chart -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Popular Movies</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="movieChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Chart -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Booking Status</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingStatusChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        console.log('Starting simple dashboard...');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready');
+            
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded!');
+                return;
+            }
+            
+            console.log('Chart.js loaded, version:', Chart.version);
+            
+            // Simple revenue chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                console.log('Creating revenue chart...');
+                try {
+                    new Chart(revenueCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            datasets: [{
+                                label: 'Revenue',
+                                data: [120000, 150000, 200000, 175000, 250000, 300000, 280000],
+                                borderColor: '#007bff',
+                                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    console.log('Revenue chart created successfully');
+                } catch (error) {
+                    console.error('Revenue chart error:', error);
+                }
+            }
+            
+            // Simple movie chart
+            const movieCtx = document.getElementById('movieChart');
+            if (movieCtx) {
+                console.log('Creating movie chart...');
+                try {
+                    new Chart(movieCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Movie A', 'Movie B', 'Movie C', 'Movie D'],
+                            datasets: [{
+                                data: [45, 35, 25, 20],
+                                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    console.log('Movie chart created successfully');
+                } catch (error) {
+                    console.error('Movie chart error:', error);
+                }
+            }
+            
+            // Simple status chart
+            const statusCtx = document.getElementById('bookingStatusChart');
+            if (statusCtx) {
+                console.log('Creating status chart...');
+                try {
+                    new Chart(statusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Completed', 'Pending', 'Cancelled'],
+                            datasets: [{
+                                data: [80, 15, 5],
+                                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                    console.log('Status chart created successfully');
+                } catch (error) {
+                    console.error('Status chart error:', error);
+                }
+            }
+            
+            console.log('All simple charts initialized');
+        });
+    </script>
+}

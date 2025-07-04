@@ -1,0 +1,696 @@
+﻿@model SeatViewModel
+@{
+    ViewData["Title"] = "Chọn ghế";
+}
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-couch me-2"></i>Sơ đồ ghế</h3>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="screen-container">
+                            <div class="screen">
+                                <i class="fas fa-film me-2"></i>Màn hình
+                            </div>
+                        </div>
+
+                        <div class="seat-map">
+                            @{
+                                var rows = Model.Seats.Select(s => s.Row).Distinct().OrderBy(r => r).ToList();
+                                foreach (var row in rows)
+                                {
+                                    <div class="seat-row mb-2">
+                                        <div class="row-label me-3">@row</div>
+                                        @foreach (var seat in Model.Seats.Where(s => s.Row == row).OrderBy(s => s.Number))
+                                        {
+                                            
+                                                string seatClass;
+                                                string tooltipText;
+                                                bool isSelectable = true;
+                                                
+                                                // First check status
+                                                if (seat.Status == "Maintenance") {
+                                                    seatClass = "maintenance";
+                                                    tooltipText = "Ghế đang bảo trì";
+                                                    isSelectable = false;
+                                                }
+                                                else if (seat.Status == "Cleaning") {
+                                                    seatClass = "cleaning";
+                                                    tooltipText = "Ghế đang vệ sinh";
+                                                    isSelectable = false;
+                                                }
+                                                // Check if seat is being processed
+                                                else if (seat.Status == "Processing") {
+                                                    seatClass = "processing";
+                                                    tooltipText = "Ghế đang xử lý thanh toán";
+                                                    isSelectable = false;
+                                                }
+                                                // Check if seat is booked or unavailable
+                                                else if (seat.Status == "Booked" || !seat.IsAvailable) {
+                                                    seatClass = "unavailable";
+                                                    tooltipText = "Ghế đã được đặt";
+                                                    isSelectable = false;
+                                                }
+                                                // Otherwise it's an available seat of some type
+                                                else {
+                                                    seatClass = seat.Type.ToLower();
+                                                    tooltipText = $"Ghế {seat.Row}{seat.Number} - {seat.Price:N0} VNĐ";
+                                                }
+                                            
+                                            
+                                            <div class="seat @seatClass" 
+                                                 data-seat-id="@seat.Id"
+                                                 data-seat="@($"{seat.Row}{seat.Number}")"
+                                                 data-price="@seat.Price"
+                                                 data-type="@seat.Type"
+                                                 data-status="@seat.Status"
+                                                 data-available="@isSelectable.ToString().ToLower()"
+                                                 data-bs-toggle="tooltip"
+                                                 title="@tooltipText">
+                                                @seat.Number
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <div class="seat-legend mt-4">
+                            <div class="alert alert-info small mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Lưu ý:</strong> Ghế đang xử lý thanh toán sẽ được tự động giải phóng sau 1 phút nếu thanh toán không hoàn thành.
+                            </div>
+                            <div class="d-flex justify-content-center gap-4 flex-wrap">
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample standard"></div>
+                                    <span class="ms-2">Ghế thường - 50.000 VNĐ</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample vip"></div>
+                                    <span class="ms-2">Ghế VIP - 80.000 VNĐ</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample couple"></div>
+                                    <span class="ms-2">Ghế đôi - 95.000 VNĐ</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample unavailable"></div>
+                                    <span class="ms-2">Ghế đã đặt</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample processing"></div>
+                                    <span class="ms-2">Ghế đang xử lý</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample maintenance"></div>
+                                    <span class="ms-2">Ghế đang bảo trì</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample cleaning"></div>
+                                    <span class="ms-2">Ghế đang vệ sinh</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <div class="seat-sample selected"></div>
+                                    <span class="ms-2">Ghế đang chọn</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm booking-info-card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Thông tin đặt vé</h3>
+                </div>
+                <div class="card-body">
+                    <form id="bookingForm">
+                        <input type="hidden" name="showtimeId" value="@Model.ShowtimeId" />
+                        <input type="hidden" id="selectedSeats" name="selectedSeats" value="" />
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-film me-2"></i>Phim</label>
+                            <p class="form-control-static">@Model.MovieTitle</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="far fa-clock me-2"></i>Suất chiếu</label>
+                            <p class="form-control-static">@Model.ShowtimeDateTime.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-couch me-2"></i>Ghế đã chọn</label>
+                            <p class="form-control-static" id="selectedSeatsDisplay">Chưa chọn ghế</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-money-bill-wave me-2"></i>Tổng tiền vé</label>
+                            <p class="form-control-static" id="totalPrice">0 VND</p>
+                        </div>
+
+                        <div class="mb-3 mt-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h5 class="mb-3"><i class="fas fa-utensils me-2"></i>Combo bắp nước</h5>
+                                <span class="badge bg-success">Giảm 5%</span>
+                            </div>
+                            <div class="alert alert-info small">
+                                <i class="fas fa-info-circle me-2"></i>Mua combo cùng vé được giảm giá 5%
+                            </div>
+                            <div class="concession-container mt-3">
+                                <div class="accordion" id="concessionAccordion">
+                                    <!-- Food section -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="foodHeading">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#foodCollapse" aria-expanded="true" aria-controls="foodCollapse">
+                                                <i class="fas fa-hamburger me-2"></i>Đồ ăn
+                                            </button>
+                                        </h2>
+                                        <div id="foodCollapse" class="accordion-collapse collapse show" aria-labelledby="foodHeading" data-bs-parent="#concessionAccordion">
+                                            <div class="accordion-body p-2" id="foodItems">
+                                                <!-- Food items will be loaded dynamically -->
+                                                <div class="text-center py-2">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Đang tải...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Drink section -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="drinkHeading">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#drinkCollapse" aria-expanded="false" aria-controls="drinkCollapse">
+                                                <i class="fas fa-glass-cheers me-2"></i>Đồ uống
+                                            </button>
+                                        </h2>
+                                        <div id="drinkCollapse" class="accordion-collapse collapse" aria-labelledby="drinkHeading" data-bs-parent="#concessionAccordion">
+                                            <div class="accordion-body p-2" id="drinkItems">
+                                                <!-- Drink items will be loaded dynamically -->
+                                                <div class="text-center py-2">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Đang tải...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Combo section -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="comboHeading">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#comboCollapse" aria-expanded="false" aria-controls="comboCollapse">
+                                                <i class="fas fa-box me-2"></i>Combo
+                                            </button>
+                                        </h2>
+                                        <div id="comboCollapse" class="accordion-collapse collapse" aria-labelledby="comboHeading" data-bs-parent="#concessionAccordion">
+                                            <div class="accordion-body p-2" id="comboItems">
+                                                <!-- Combo items will be loaded dynamically -->
+                                                <div class="text-center py-2">
+                                                    <div class="spinner-border spinner-border-sm" role="status">
+                                                        <span class="visually-hidden">Đang tải...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 mt-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5><i class="fas fa-calculator me-2"></i>Tổng cộng</h5>
+                                <p class="form-control-static fw-bold fs-5" id="grandTotalPrice">0 VND</p>
+                            </div>
+                            <div class="small text-muted text-end" id="discountInfo">Bao gồm giảm giá 5% cho combo</div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <a href="@Url.Action("Index", "Concession")" class="btn btn-outline-primary flex-grow-1">
+                                <i class="fas fa-hamburger me-2"></i>Mua riêng bắp nước
+                            </a>
+                            <button type="submit" class="btn btn-primary flex-grow-1" id="confirmButton" disabled>
+                                <i class="fas fa-shopping-cart me-2"></i>Thêm vào giỏ
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Debug log for seat statuses - check browser console
+        console.log('Seat data loaded:');
+        @foreach(var seat in Model.Seats.Where(s => s.Status != "Available")) {
+            <text>console.log('Seat @seat.Row@seat.Number: Status=@seat.Status, IsAvailable=@seat.IsAvailable.ToString().ToLower()');</text>
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+
+            const seats = document.querySelectorAll('.seat[data-available="true"]');
+            const selectedSeatsInput = document.getElementById('selectedSeats');
+            const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+            const totalPriceDisplay = document.getElementById('totalPrice');
+            const grandTotalPriceDisplay = document.getElementById('grandTotalPrice');
+            const discountInfoDisplay = document.getElementById('discountInfo');
+            const confirmButton = document.getElementById('confirmButton');
+            const bookingForm = document.getElementById('bookingForm');
+            
+            // Containers for concession items
+            const foodItemsContainer = document.getElementById('foodItems');
+            const drinkItemsContainer = document.getElementById('drinkItems');
+            const comboItemsContainer = document.getElementById('comboItems');
+
+            let selectedSeats = new Map();
+            let selectedConcessions = new Map();
+
+            // Load concession items
+            loadConcessionItems();
+
+            // Seat selection logic
+            seats.forEach(seat => {
+                seat.addEventListener('click', function() {
+                    const seatId = this.getAttribute('data-seat-id');
+                    const seatLabel = this.getAttribute('data-seat');
+                    const price = parseFloat(this.getAttribute('data-price'));
+                    
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedSeats.delete(seatId);
+                    } else {
+                        this.classList.add('selected');
+                        selectedSeats.set(seatId, { label: seatLabel, price: price });
+                    }
+
+                    updateBookingInfo();
+                });
+            });
+
+            function updateBookingInfo() {
+                // Update seat information
+                if (selectedSeats.size > 0) {
+                    const seatLabels = Array.from(selectedSeats.values()).map(s => s.label);
+                    selectedSeatsDisplay.textContent = seatLabels.join(', ');
+
+                    const seatIds = Array.from(selectedSeats.keys());
+                    selectedSeatsInput.value = seatIds.join(',');
+
+                    const totalTicketPrice = Array.from(selectedSeats.values())
+                        .reduce((sum, seat) => sum + seat.price, 0);
+                    totalPriceDisplay.textContent = totalTicketPrice.toLocaleString('vi-VN') + ' VND';
+
+                    confirmButton.disabled = false;
+                    
+                    // Calculate concession prices with discount
+                    updateTotalPrices(totalTicketPrice);
+                } else {
+                    selectedSeatsDisplay.textContent = 'Chưa chọn ghế';
+                    selectedSeatsInput.value = '';
+                    totalPriceDisplay.textContent = '0 VND';
+                    grandTotalPriceDisplay.textContent = '0 VND';
+                    discountInfoDisplay.style.display = 'none';
+                    confirmButton.disabled = true;
+                }
+            }
+            
+            function updateTotalPrices(ticketPrice) {
+                let totalConcessionPrice = 0;
+                let totalDiscount = 0;
+                
+                // Calculate concession prices
+                selectedConcessions.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    totalConcessionPrice += itemTotal;
+                    
+                    // Apply 5% discount for concessions
+                    if (selectedSeats.size > 0 && item.quantity > 0) {
+                        const itemDiscount = itemTotal * 0.05;
+                        totalDiscount += itemDiscount;
+                    }
+                });
+                
+                const grandTotal = ticketPrice + totalConcessionPrice - totalDiscount;
+                
+                grandTotalPriceDisplay.textContent = grandTotal.toLocaleString('vi-VN') + ' VND';
+                
+                if (totalDiscount > 0) {
+                    discountInfoDisplay.textContent = `Đã giảm ${totalDiscount.toLocaleString('vi-VN')} VND (5% cho combo)`;
+                    discountInfoDisplay.style.display = 'block';
+                } else {
+                    discountInfoDisplay.style.display = 'none';
+                }
+            }
+
+            // Load concession items from the server
+            function loadConcessionItems() {
+                $.get('@Url.Action("GetConcessions", "Concession")')
+                    .done(function(data) {
+                        // Render food items
+                        renderConcessionItems(data.foods, foodItemsContainer);
+                        
+                        // Render drink items
+                        renderConcessionItems(data.drinks, drinkItemsContainer);
+                        
+                        // Render combo items
+                        renderConcessionItems(data.combos, comboItemsContainer);
+                    })
+                    .fail(function(error) {
+                        console.error('Failed to load concessions:', error);
+                        foodItemsContainer.innerHTML = '<div class="alert alert-danger">Không thể tải dữ liệu đồ ăn</div>';
+                        drinkItemsContainer.innerHTML = '<div class="alert alert-danger">Không thể tải dữ liệu đồ uống</div>';
+                        comboItemsContainer.innerHTML = '<div class="alert alert-danger">Không thể tải dữ liệu combo</div>';
+                    });
+            }
+            
+            function renderConcessionItems(items, container) {
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<p class="text-center text-muted py-2">Không có sản phẩm</p>';
+                    return;
+                }
+                
+                const html = items.map(item => `
+                    <div class="concession-item card mb-2">
+                        <div class="card-body p-2">
+                            <div class="d-flex align-items-center">
+                                <div class="concession-image me-2">
+                                    ${item.imagePath ? `<img src="${item.imagePath}" alt="${item.name}" class="rounded" width="50">` : 
+                                    `<div class="placeholder-image"><i class="fas ${item.type === 0 ? 'fa-hamburger' : item.type === 1 ? 'fa-glass-cheers' : 'fa-box'} fa-2x"></i></div>`}
+                                </div>
+                                <div class="concession-info flex-grow-1">
+                                    <h6 class="mb-0">${item.name}</h6>
+                                    <div class="text-muted small">${item.description || ''}</div>
+                                    <div class="fw-bold">${item.price.toLocaleString('vi-VN')} VND</div>
+                                </div>
+                                <div class="concession-quantity">
+                                    <div class="input-group input-group-sm" style="width: 100px;">
+                                        <button type="button" class="btn btn-outline-secondary decrease-qty" data-id="${item.id}">-</button>
+                                        <input type="number" class="form-control text-center quantity-input" value="0" min="0" max="10" data-id="${item.id}" data-price="${item.price}" data-name="${item.name}">
+                                        <button type="button" class="btn btn-outline-secondary increase-qty" data-id="${item.id}">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = html;
+                
+                // Add event listeners to quantity buttons
+                container.querySelectorAll('.decrease-qty').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const input = container.querySelector(`.quantity-input[data-id="${id}"]`);
+                        if (input.value > 0) {
+                            input.value = parseInt(input.value) - 1;
+                            input.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+                
+                container.querySelectorAll('.increase-qty').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const input = container.querySelector(`.quantity-input[data-id="${id}"]`);
+                        if (input.value < 10) {
+                            input.value = parseInt(input.value) + 1;
+                            input.dispatchEvent(new Event('change'));
+                        }
+                    });
+                });
+                
+                container.querySelectorAll('.quantity-input').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        const price = parseFloat(this.getAttribute('data-price'));
+                        const name = this.getAttribute('data-name');
+                        const quantity = parseInt(this.value);
+                        
+                        if (quantity > 0) {
+                            selectedConcessions.set(id, {
+                                id: id,
+                                name: name,
+                                price: price,
+                                quantity: quantity
+                            });
+                        } else {
+                            selectedConcessions.delete(id);
+                        }
+                        
+                        updateBookingInfo();
+                    });
+                });
+            }
+
+            // Submit form
+            bookingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (selectedSeats.size === 0) {
+                    alert('Vui lòng chọn ít nhất một ghế.');
+                    return false;
+                }
+                
+                const showtimeId = document.querySelector('input[name="showtimeId"]').value;
+                const selectedSeatsValue = document.getElementById('selectedSeats').value;
+                
+                // Show loading spinner in the confirm button
+                const confirmButtonText = confirmButton.innerHTML;
+                confirmButton.disabled = true;
+                confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...';
+                
+                // Create arrays for concession items
+                const itemIds = [];
+                const quantities = [];
+                
+                selectedConcessions.forEach(item => {
+                    if (item.quantity > 0) {
+                        itemIds.push(item.id);
+                        quantities.push(item.quantity);
+                    }
+                });
+                
+                // Always use Concession controller AddToCart to handle both tickets and concessions
+                // Even if no concessions are selected, this creates a more consistent flow
+                $.post('@Url.Action("AddToCart", "Concession")', { 
+                    showtimeId: showtimeId,
+                    selectedSeats: selectedSeatsValue,
+                    itemIds: itemIds,
+                    quantities: quantities
+                })
+                .done(function(response) {
+                    // Show success message with a checkmark animation
+                    const alertContainer = document.createElement('div');
+                    alertContainer.className = 'alert alert-success d-flex align-items-center';
+                    alertContainer.innerHTML = `
+                        <svg class="checkmark me-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                        <div>Đã thêm vào giỏ hàng thành công!</div>
+                    `;
+                    
+                    // Insert alert before the form
+                    bookingForm.parentElement.insertBefore(alertContainer, bookingForm);
+                    
+                    // Redirect after a short delay to show the message
+                    setTimeout(function() {
+                        window.location.href = '@Url.Action("Index", "Cart")';
+                    }, 1000);
+                })
+                .fail(function(xhr) {
+                    // Reset button
+                    confirmButton.disabled = false;
+                    confirmButton.innerHTML = confirmButtonText;
+                    
+                    // Show error message
+                    let errorMsg = 'Có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    alert(errorMsg);
+                });
+                
+                return false;
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        /* Add styles for maintenance and cleaning seats */
+        .seat.maintenance, .seat-sample.maintenance {
+            background-color: #dc3545 !important; /* Red - same as danger for maintenance */
+            color: white !important;
+            cursor: not-allowed !important;
+            border: 2px solid #aa0000 !important;
+        }
+        
+        .seat.cleaning, .seat-sample.cleaning {
+            background-color: #212529 !important; /* Dark - black for cleaning */
+            color: white !important;
+            cursor: not-allowed !important;
+            border: 2px solid #000000 !important;
+        }
+        
+        /* Existing styles */
+        .screen-container {
+            margin-bottom: 30px;
+            perspective: 500px;
+        }
+        
+        .screen {
+            height: 50px;
+            background: linear-gradient(to bottom, #ccc, #fff);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            transform: rotateX(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+        }
+        
+        .seat-map {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .seat-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .row-label {
+            width: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .seat {
+            width: 36px;
+            height: 36px;
+            margin: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .seat:hover:not(.unavailable):not(.maintenance):not(.cleaning):not(.processing) {
+            transform: scale(1.1);
+        }
+        
+        .seat.standard, .seat-sample.standard {
+            background-color: #0d6efd;
+            color: white;
+        }
+        
+        .seat.vip, .seat-sample.vip {
+            background-color: #9966CC;
+            color: white;
+        }
+        
+        .seat.couple, .seat-sample.couple {
+            background-color: #ffa500;
+            color: white;
+        }
+        
+        .seat.unavailable, .seat-sample.unavailable {
+            background-color: #6c757d;
+            color: white;
+            cursor: not-allowed;
+        }
+        
+        .seat.processing, .seat-sample.processing {
+            background-color: #ffc107;
+            color: black;
+            cursor: not-allowed;
+            border: 2px solid #e0a800;
+        }
+        
+        .seat.selected, .seat-sample.selected {
+            background-color: #198754;
+            color: white;
+        }
+        
+        .seat-sample {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .booking-info-card {
+            position: sticky;
+            top: 20px;
+        }
+        
+        /* Concession styling */
+        .concession-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 6px;
+        }
+        
+        .concession-item {
+            transition: transform 0.2s;
+            border: 1px solid #dee2e6;
+        }
+        
+        .concession-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .placeholder-image {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-radius: 4px;
+        }
+        
+        .quantity-input {
+            font-weight: bold;
+        }
+        
+        /* Make accordion headers more compact */
+        .accordion-button {
+            padding: 0.5rem 1rem;
+        }
+        
+        .accordion-body {
+            padding: 0.5rem;
+        }
+        
+        /* Badges and alerts */
+        .badge.bg-success {
+            background-color: #198754 !important;
+        }
+    </style>
+}
+

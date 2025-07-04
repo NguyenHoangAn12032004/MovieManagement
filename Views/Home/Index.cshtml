@@ -1,0 +1,587 @@
+﻿@model MovieListViewModel
+@{
+    ViewData["Title"] = "Trang Chủ";
+}
+
+<!-- Hero Section with Featured Movie -->
+<div class="hero-section">
+    @if (Model.FeaturedMovies.Any())
+    {
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                @for (var i = 0; i < Model.FeaturedMovies.Count; i++)
+                {
+                    var movie = Model.FeaturedMovies[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="hero-backdrop-container">
+                            <img src="@movie.BackdropPath" class="hero-backdrop" alt="@movie.Title">
+                            <div class="hero-backdrop-overlay"></div>
+                        </div>
+                        <div class="container position-relative h-100">
+                            <div class="carousel-caption text-start">
+                                <span class="badge bg-danger mb-2">Nổi Bật</span>
+                                <h1 class="display-4 fw-bold text-white mb-3 hero-title">@movie.Title</h1>
+                                <div class="d-flex align-items-center mb-3 hero-meta">
+                                    <span class="badge bg-warning text-dark me-3">
+                                        <i class="fas fa-star me-1"></i>@movie.VoteAverage.ToString("0.0")
+                                    </span>
+                                    <span class="text-white me-3">
+                                        <i class="far fa-calendar-alt me-1"></i>@movie.ReleaseDate.ToString("dd/MM/yyyy")
+                                    </span>
+                                    <span class="text-white">
+                                        <i class="far fa-clock me-1"></i>@movie.Duration phút
+                                    </span>
+                                </div>
+                                <p class="lead mb-4 hero-overview">@(movie.Overview.Length > 200 ? movie.Overview.Substring(0, 200) + "..." : movie.Overview)</p>
+                                <div class="hero-actions">
+                                    <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" class="btn btn-primary btn-lg me-2">
+                                        <i class="fas fa-info-circle me-2"></i>Chi Tiết
+                                    </a>
+                                    <a href="@Url.Action("Index", "Booking", new { movieId = movie.Id })" class="btn btn-outline-light btn-lg">
+                                        <i class="fas fa-ticket-alt me-2"></i>Mua Vé
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+            <div class="carousel-indicators">
+                @for (var i = 0; i < Model.FeaturedMovies.Count; i++)
+                {
+                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i+1)"></button>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Now Showing Section -->
+<div class="section-container py-5">
+    <div class="container">
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="section-title display-6 fw-bold">Đang Chiếu</h2>
+                <p class="text-muted mb-0">Những bộ phim đang hot tại rạp</p>
+            </div>
+            <a href="@Url.Action("NowShowing", "Movie")" class="btn btn-outline-primary rounded-pill">
+                Xem tất cả <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var movie in Model.NowShowingMovies.Take(8))
+            {
+                <div class="col movie-item">
+                    <div class="movie-card h-100">
+                        <div class="movie-poster-container position-relative overflow-hidden rounded-top">
+                            @if (movie.PosterPath.StartsWith("/images/placeholder"))
+                            {
+                                <div class="movie-poster-placeholder d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-film fa-3x mb-2"></i>
+                                    <span class="text-center px-3">@movie.Title</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@movie.PosterPath" alt="@movie.Title" class="movie-poster w-100">
+                            }
+                            <div class="movie-overlay d-flex flex-column justify-content-between p-3">
+                                <div class="movie-badges">
+                                    <span class="badge bg-primary me-2">Đang chiếu</span>
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-star me-1"></i>@movie.VoteAverage.ToString("0.0")
+                                    </span>
+                                </div>
+                                <div class="movie-actions">
+                                    <a href="@Url.Action("Index", "Booking", new { movieId = movie.Id })" class="btn btn-primary btn-sm mb-2 w-100">
+                                        <i class="fas fa-ticket-alt me-1"></i>Mua Vé
+                                    </a>
+                                    <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" 
+                                       class="btn btn-outline-light btn-sm w-100">
+                                        <i class="fas fa-info-circle me-1"></i>Chi Tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="movie-info p-3">
+                            <h3 class="movie-title h5 mb-2 text-truncate">@movie.Title</h3>
+                            <div class="d-flex align-items-center text-muted small mb-2">
+                                <span class="me-3">
+                                    <i class="far fa-calendar-alt me-1"></i>@movie.ReleaseDate.ToString("dd/MM/yyyy")
+                                </span>
+                                <span>
+                                    <i class="far fa-clock me-1"></i>@movie.Duration phút
+                                </span>
+                            </div>
+                            <p class="movie-genres small text-muted mb-0">
+                                @{
+                                    var genres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(movie.GenreNames ?? "[]");
+                                    @String.Join(", ", genres)
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Coming Soon Section -->
+<div class="section-container coming-soon-section py-5">
+    <div class="container">
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="section-title display-6 fw-bold">Sắp Chiếu</h2>
+                <p class="text-muted mb-0">Khám phá những bộ phim hấp dẫn sắp ra mắt</p>
+            </div>
+            <a href="@Url.Action("ComingSoon", "Movie")" class="btn btn-outline-primary rounded-pill">
+                Xem tất cả <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var movie in Model.ComingSoonMovies.Take(8))
+            {
+                <div class="col movie-item">
+                    <div class="movie-card h-100">
+                        <div class="movie-poster-container position-relative overflow-hidden rounded-top">
+                            @if (movie.PosterPath.StartsWith("/images/placeholder"))
+                            {
+                                <div class="movie-poster-placeholder d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-film fa-3x mb-2"></i>
+                                    <span class="text-center px-3">@movie.Title</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@movie.PosterPath" alt="@movie.Title" class="movie-poster w-100">
+                            }
+                            <div class="movie-overlay d-flex flex-column justify-content-between p-3">
+                                <div class="movie-badges">
+                                    <span class="badge bg-danger me-2">Sắp chiếu</span>
+                                    <span class="release-date text-white">
+                                        <i class="far fa-calendar-alt me-1"></i>@movie.ReleaseDate.ToString("dd/MM/yyyy")
+                                    </span>
+                                </div>
+                                <div class="movie-actions">
+                                    <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" 
+                                       class="btn btn-light btn-sm w-100">
+                                        <i class="fas fa-info-circle me-1"></i>Chi Tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="movie-info p-3">
+                            <h3 class="movie-title h5 mb-2 text-truncate">@movie.Title</h3>
+                            <div class="d-flex align-items-center text-muted small mb-2">
+                                <span class="me-3">
+                                    <i class="far fa-calendar-alt me-1"></i>@movie.ReleaseDate.ToString("dd/MM/yyyy")
+                                </span>
+                                <span>
+                                    <i class="far fa-clock me-1"></i>@movie.Duration phút
+                                </span>
+                            </div>
+                            <p class="movie-genres small text-muted mb-0">
+                                @{
+                                    var genres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(movie.GenreNames ?? "[]");
+                                    @String.Join(", ", genres)
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- App Features Section -->
+<div class="section-container features-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold">Đặt Vé Dễ Dàng</h2>
+            <p class="lead text-muted">Tận hưởng trải nghiệm đặt vé tốt nhất với những tính năng tiện lợi</p>
+        </div>
+        
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            <div class="col">
+                <div class="feature-card h-100 text-center p-4 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-ticket-alt fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="feature-title h5 mb-3">Đặt Vé Nhanh Chóng</h3>
+                    <p class="feature-description text-muted mb-0">Đặt vé chỉ với vài thao tác đơn giản, tiết kiệm thời gian và công sức</p>
+                </div>
+            </div>
+            <div class="col">
+                <div class="feature-card h-100 text-center p-4 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-film fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="feature-title h5 mb-3">Phim Mới Cập Nhật</h3>
+                    <p class="feature-description text-muted mb-0">Liên tục cập nhật các bộ phim mới nhất từ trong nước và quốc tế</p>
+                </div>
+            </div>
+            <div class="col">
+                <div class="feature-card h-100 text-center p-4 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-couch fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="feature-title h5 mb-3">Chọn Ghế Linh Hoạt</h3>
+                    <p class="feature-description text-muted mb-0">Tự do lựa chọn vị trí ghế ngồi yêu thích với giao diện trực quan</p>
+                </div>
+            </div>
+            <div class="col">
+                <div class="feature-card h-100 text-center p-4 rounded-3">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-mobile-alt fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="feature-title h5 mb-3">Trải Nghiệm Di Động</h3>
+                    <p class="feature-description text-muted mb-0">Đặt vé mọi lúc mọi nơi trên mọi thiết bị với giao diện tương thích</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="cta-section py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mb-4 mb-lg-0">
+                <h2 class="display-6 fw-bold text-white mb-3">Sẵn sàng trải nghiệm?</h2>
+                <p class="lead text-white-50 mb-0">Đặt vé ngay hôm nay và tận hưởng những bộ phim đang hot tại rạp</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="@Url.Action("NowShowing", "Movie")" class="btn btn-light btn-lg px-4">
+                    <i class="fas fa-ticket-alt me-2"></i>Mua vé ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hero-section {
+            position: relative;
+            margin-top: -70px;
+            height: 100vh;
+            min-height: 600px;
+            overflow: hidden;
+        }
+
+        .carousel-item {
+            height: 100vh;
+            min-height: 600px;
+        }
+        
+        .hero-backdrop-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .hero-backdrop {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.05);
+            transition: transform 10s ease;
+        }
+        
+        .carousel-item.active .hero-backdrop {
+            transform: scale(1);
+        }
+        
+        .hero-backdrop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.4) 100%);
+        }
+
+        .carousel-caption {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+            right: auto;
+            bottom: auto;
+            width: 50%;
+            text-align: left;
+            padding: 0;
+        }
+        
+        .hero-title {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.2s;
+        }
+        
+        .hero-meta {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.4s;
+        }
+        
+        .hero-overview {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.6s;
+        }
+        
+        .hero-actions {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition-delay: 0.8s;
+        }
+        
+        .carousel-item.active .hero-title,
+        .carousel-item.active .hero-meta,
+        .carousel-item.active .hero-overview,
+        .carousel-item.active .hero-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 5%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hero-section:hover .carousel-control-prev,
+        .hero-section:hover .carousel-control-next {
+            opacity: 0.8;
+        }
+
+        .carousel-indicators {
+            margin-bottom: 2rem;
+        }
+
+        .carousel-indicators button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 6px;
+            background-color: rgba(255,255,255,0.5);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-indicators button.active {
+            background-color: #fff;
+            transform: scale(1.2);
+        }
+
+        .section-container {
+            padding: 60px 0;
+        }
+        
+        .section-title {
+            position: relative;
+            color: #212529;
+            margin-bottom: 0.25rem;
+        }
+
+        .coming-soon-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .features-section {
+            background-color: #f8f9fa;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+        }
+
+        .movie-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .movie-poster-container {
+            aspect-ratio: 2/3;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .movie-poster {
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .movie-card:hover .movie-poster {
+            transform: scale(1.05);
+        }
+
+        .movie-poster-placeholder {
+            height: 100%;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            color: #6c757d;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .movie-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(0,0,0,0.7) 0%,
+                rgba(0,0,0,0.3) 50%,
+                rgba(0,0,0,0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie-card:hover .movie-overlay {
+            opacity: 1;
+        }
+
+        .feature-card {
+            background-color: #fff;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            color: #007bff;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .btn-outline-primary {
+            border-width: 2px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            transform: translateX(3px);
+        }
+        
+        @@media (max-width: 992px) {
+            .carousel-caption {
+                width: 70%;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-overview {
+                font-size: 1rem;
+            }
+            
+            .carousel-caption {
+                width: 80%;
+            }
+        }
+        
+        @@media (max-width: 576px) {
+            .carousel-caption {
+                width: 90%;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .carousel-item {
+                min-height: 500px;
+                height: auto;
+            }
+            
+            .hero-section {
+                height: auto;
+                min-height: 500px;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation for elements as they come into view
+            const animateOnScroll = function() {
+                const elements = document.querySelectorAll('.movie-item, .feature-card');
+                
+                elements.forEach(element => {
+                    const position = element.getBoundingClientRect();
+                    
+                    // Check if element is in viewport
+                    if(position.top < window.innerHeight && position.bottom >= 0) {
+                        element.classList.add('animated');
+                    }
+                });
+            };
+            
+            // Run once on page load
+            animateOnScroll();
+            
+            // Run on scroll
+            window.addEventListener('scroll', animateOnScroll);
+            
+            // Run on carousel slide
+            $('#heroCarousel').on('slid.bs.carousel', function () {
+                console.log('Slide changed');
+            });
+        });
+    </script>
+}
+

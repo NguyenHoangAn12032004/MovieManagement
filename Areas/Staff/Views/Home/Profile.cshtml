@@ -1,0 +1,276 @@
+@model MovieManagement.Models.Staff
+
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<style>
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    font-weight: bold;
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+}
+
+.stat-card {
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.action-btn {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+</style>
+
+<!-- Profile Header -->
+<div class="profile-header text-center">
+    <div class="container">
+        <div class="profile-avatar">
+            @(Model.FullName?.Substring(0, 1).ToUpper() ?? "?")
+        </div>
+        <h1 class="mb-2">@(Model.FullName ?? "Chưa cập nhật")</h1>
+        <p class="mb-0 opacity-75">@(Model.Position ?? "Nhân viên") - @(Model.Email ?? "Chưa có email")</p>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Thông tin cá nhân</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card stat-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>
+                    Thông tin chi tiết
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-person me-2 text-primary"></i>Họ và tên:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @(Model.FullName ?? "Chưa cập nhật")
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-envelope me-2 text-primary"></i>Email:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa cập nhật</span>
+                        }
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-telephone me-2 text-primary"></i>Số điện thoại:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @if(!string.IsNullOrEmpty(Model.PhoneNumber))
+                        {
+                            <a href="tel:@Model.PhoneNumber" class="text-decoration-none">@Model.PhoneNumber</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa cập nhật</span>
+                        }
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-briefcase me-2 text-primary"></i>Chức vụ:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        <span class="badge bg-primary fs-6">@(Model.Position ?? "Nhân viên")</span>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-gender-ambiguous me-2 text-primary"></i>Giới tính:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @(Model.Gender ?? "Chưa xác định")
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4">
+                        <strong><i class="bi bi-calendar-date me-2 text-primary"></i>Ngày sinh:</strong>
+                    </div>
+                    <div class="col-sm-8">
+                        @Model.BirthDate.ToString("dd/MM/yyyy")
+                        <small class="text-muted ms-2">(Tuổi: @((DateTime.Now - Model.BirthDate).Days / 365))</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Thông tin công việc -->
+        <div class="card mb-4 stat-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-briefcase me-2"></i>
+                    Thông tin công việc
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <small class="text-muted">Lương theo giờ</small>
+                    <div class="h4 text-success mb-0">
+                        <i class="bi bi-currency-dollar"></i>@Model.HourlyRate.ToString("N0") VNĐ
+                    </div>
+                </div>
+                
+                @if (Model.Bonus > 0)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted">Thưởng tháng này</small>
+                        <div class="h5 text-info mb-0">
+                            <i class="bi bi-gift"></i>+@Model.Bonus.ToString("N0") VNĐ
+                        </div>
+                    </div>
+                }
+                
+                @if (Model.Penalty > 0)
+                {
+                    <div class="mb-3">
+                        <small class="text-muted">Phạt tháng này</small>
+                        <div class="h5 text-danger mb-0">
+                            <i class="bi bi-exclamation-triangle"></i>-@Model.Penalty.ToString("N0") VNĐ
+                        </div>
+                    </div>
+                }
+                
+                <hr>
+                
+                <div class="mt-3">
+                    <small class="text-muted">Tổng thu nhập dự kiến</small>
+                    <div class="h4 text-primary mb-0">
+                        <i class="bi bi-calculator"></i>@((Model.HourlyRate * 8 * 26 + Model.Bonus - Model.Penalty).ToString("N0")) VNĐ
+                    </div>
+                    <small class="text-muted">(8h/ngày, 26 ngày/tháng)</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thông tin tài khoản -->
+        <div class="card stat-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Thông tin tài khoản
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted"><i class="bi bi-calendar-plus me-2"></i>Ngày tạo</small>
+                    <div class="fw-bold">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                    <small class="text-muted">(@((DateTime.Now - Model.CreatedAt).Days) ngày trước)</small>
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted"><i class="bi bi-clock-history me-2"></i>Cập nhật gần nhất</small>
+                    <div class="fw-bold">@Model.UpdatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>Tài khoản hoạt động
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card stat-card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Thao tác nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Index", "Ticket")" class="btn btn-primary action-btn w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-ticket-perforated fs-2 mb-2"></i>
+                            <span>Xử lý vé</span>
+                            <small class="opacity-75">Quản lý đặt vé</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Schedule")" class="btn btn-success action-btn w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-calendar-week fs-2 mb-2"></i>
+                            <span>Lịch làm việc</span>
+                            <small class="opacity-75">Xem ca làm việc</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Index")" class="btn btn-info action-btn w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-speedometer2 fs-2 mb-2"></i>
+                            <span>Dashboard</span>
+                            <small class="opacity-75">Trang tổng quan</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="@Url.Action("Index", "Home", new { area = "" })" class="btn btn-secondary action-btn w-100 h-100 d-flex flex-column justify-content-center">
+                            <i class="bi bi-house-door fs-2 mb-2"></i>
+                            <span>Về trang chủ</span>
+                            <small class="opacity-75">Trang khách hàng</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

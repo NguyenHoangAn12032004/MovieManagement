@@ -1,0 +1,252 @@
+﻿@using Microsoft.AspNetCore.Mvc.Localization
+@inject IViewLocalizer Localizer
+
+<!DOCTYPE html>
+<html lang="@System.Globalization.CultureInfo.CurrentCulture.TwoLetterISOLanguageName">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Movie Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <style>
+        body {
+            padding-top: 70px; /* Add padding to prevent content from being hidden under the fixed navbar */
+        }
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .navbar .nav-link, .navbar .navbar-brand, .navbar .form-select, .navbar .btn {
+            color: #222 !important;
+            font-weight: 500;
+        }
+        .navbar .nav-link:hover, .navbar .navbar-brand:hover {
+            color: #d90429 !important;
+        }
+        .navbar .fa-shopping-cart {
+            color: #d90429 !important;
+            font-size: 1.4rem;
+        }
+        .navbar .badge {
+            font-size: 0.75rem;
+            top: 0.2rem;
+            left: 1.2rem;
+        }
+        .navbar .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 1.5rem;
+            margin-right: 1.5rem;
+        }
+        .navbar .user-info span:first-child {
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .navbar .user-info span:last-child {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .navbar .gap-2 > * {
+            margin-right: 1rem !important;
+        }
+        .navbar .gap-2 > *:last-child {
+            margin-right: 0 !important;
+        }
+        .navbar .language-selector {
+            min-width: 70px;
+            border-radius: 0.3rem;
+            border: 1px solid #ddd;
+            padding: 0.2rem 0.5rem;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light fixed-top">
+            <div class="container d-flex justify-content-between align-items-center">
+                <!-- Left: Logo + Menu -->
+                <div class="d-flex align-items-center">
+                    <a class="navbar-brand d-flex align-items-center me-4" href="/">
+                        <span class="brand-text">Movie<span class="text-danger">Star</span></span>
+                    </a>
+                    <div class="d-flex align-items-center">
+                        <div class="nav-item">
+                            <a class="nav-link" href="/">@Localizer["Home"]</a>
+                        </div>
+                        <div class="nav-item">
+                            <a class="nav-link" href="/Movie">@Localizer["Movies"]</a>
+                        </div>
+                        <div class="nav-item">
+                            <a class="nav-link" href="/Concession">
+                                <i class="fas fa-utensils me-1"></i>Bắp Nước
+                            </a>
+                        </div>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="nav-item">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="Index">Quản Lý</a>
+                            </div>
+                        }
+                        @if (User.IsInRole("Staff"))
+                        {
+                            <div class="nav-item">
+                                <a class="nav-link" asp-area="Staff" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-user-tie me-1"></i>Nhân viên
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Right: Search + Cart + Login + Language -->
+                <div class="d-flex align-items-center gap-2">
+                    <form asp-controller="Movie" asp-action="Search" method="get" class="d-flex align-items-center" style="max-width: 300px; width: 100%;">
+                        <div class="search-container flex-grow-1">
+                            <input type="search" name="query" class="search-box me-2" placeholder="@Localizer["Search"]" required style="width: 100%; min-width: 120px;" />
+                        </div>
+                    </form>
+                    <a asp-controller="Cart" asp-action="Index" class="nav-link position-relative me-2 d-flex align-items-center">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="ms-1">Giỏ hàng</span>
+                        @{
+                            var cartItemCount = Context.Session.GetString("CartItemCount");
+                            if (!string.IsNullOrEmpty(cartItemCount) && int.Parse(cartItemCount) > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    @cartItemCount
+                                </span>
+                            }
+                        }
+                    </a>
+                    <partial name="_LoginPartial" />
+                    <form id="language-form" asp-controller="Language" asp-action="Change" method="post" class="d-inline ms-2 mb-0">
+                        <select name="culture" onchange="document.getElementById('language-form').submit();" class="language-selector">
+                            <option value="vi" selected>VN</option>
+                            <option value="en">EN</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>MovieStar</h5>
+                    <p>Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</p>
+                    <p>Điện thoại: 0123 456 789</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Đường dẫn nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="@Url.Action("Index", "Movie", new { area = "" })">Phim</a></li>
+                        <li><a href="#">Rạp</a></li>
+                        <li><a href="#">Khuyến mãi</a></li>
+                        <li><a href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Kết nối với chúng tôi</h5>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        function switchLanguage(culture) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("SetLanguage", "Language")';
+
+            var cultureName = document.createElement('input');
+            cultureName.type = 'hidden';
+            cultureName.name = 'culture';
+            cultureName.value = culture;
+
+            var returnUrl = document.createElement('input');
+            returnUrl.type = 'hidden';
+            returnUrl.name = 'returnUrl';
+            returnUrl.value = window.location.pathname;
+
+            form.appendChild(cultureName);
+            form.appendChild(returnUrl);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Configure Toastr
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+        
+        // Display flash messages if available
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                $(document).ready(function() {
+                    toastr.success('@TempData["SuccessMessage"]', 'Thành công');
+                });
+            </text>
+        }
+        
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+                $(document).ready(function() {
+                    toastr.error('@TempData["ErrorMessage"]', 'Lỗi');
+                });
+            </text>
+        }
+        
+        @if (TempData["InfoMessage"] != null)
+        {
+            <text>
+                $(document).ready(function() {
+                    toastr.info('@TempData["InfoMessage"]', 'Thông báo');
+                });
+            </text>
+        }
+        
+        @if (TempData["WarningMessage"] != null)
+        {
+            <text>
+                $(document).ready(function() {
+                    toastr.warning('@TempData["WarningMessage"]', 'Cảnh báo');
+                });
+            </text>
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

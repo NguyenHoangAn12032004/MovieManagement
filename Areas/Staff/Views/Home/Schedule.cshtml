@@ -1,0 +1,202 @@
+@model IEnumerable<MovieManagement.Models.StaffSchedule>
+
+@{
+    ViewData["Title"] = "Lịch làm việc";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">Lịch làm việc</h1>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Quay lại Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Summary -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <div class="h4 text-primary">@Model.Count()</div>
+                        <small class="text-muted">Tổng ca làm</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="h4 text-success">@Model.Where(s => s.Date >= DateTime.Today).Count()</div>
+                        <small class="text-muted">Ca sắp tới</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="h4 text-info">@Model.Where(s => s.Date.Date == DateTime.Today).Count()</div>
+                        <small class="text-muted">Ca hôm nay</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="h4 text-warning">@Model.Where(s => s.Date < DateTime.Today).Count()</div>
+                        <small class="text-muted">Ca đã qua</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Bộ lọc nhanh</h6>
+            </div>
+            <div class="card-body">
+                <div class="btn-group-vertical w-100" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterSchedule('all')">
+                        Tất cả
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="filterSchedule('today')">
+                        Hôm nay
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="filterSchedule('upcoming')">
+                        Sắp tới
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="filterSchedule('past')">
+                        Đã qua
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-week me-2"></i>
+                    Chi tiết lịch làm việc
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="scheduleTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Thứ</th>
+                                    <th>Ca làm việc</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var schedule in Model.OrderBy(s => s.Date))
+                                {
+                                    var isToday = schedule.Date.Date == DateTime.Today;
+                                    var isPast = schedule.Date < DateTime.Today;
+                                    var isUpcoming = schedule.Date > DateTime.Today;
+                                    
+                                    <tr class="schedule-row" 
+                                        data-filter="@(isToday ? "today" : isPast ? "past" : "upcoming")">
+                                        <td>
+                                            <strong>@schedule.Date.ToString("dd/MM/yyyy")</strong>
+                                        </td>
+                                        <td>
+                                            @schedule.Date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))
+                                        </td>
+                                        <td>
+                                            <span class="badge @(schedule.Shift == "Sáng" ? "bg-warning" : 
+                                                                schedule.Shift == "Chiều" ? "bg-info" : 
+                                                                schedule.Shift == "Tối" ? "bg-dark" : "bg-secondary")">
+                                                @schedule.Shift
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (isToday)
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-circle-fill me-1"></i>Hôm nay
+                                                </span>
+                                            }
+                                            else if (isPast)
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-check-circle me-1"></i>Đã qua
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-clock me-1"></i>Sắp tới
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (isToday)
+                                            {
+                                                <small class="text-success"><i class="bi bi-star-fill"></i> Ca làm việc hôm nay</small>
+                                            }
+                                            else if (isUpcoming && (schedule.Date - DateTime.Today).Days <= 3)
+                                            {
+                                                <small class="text-warning"><i class="bi bi-exclamation-triangle"></i> Sắp đến (@((schedule.Date - DateTime.Today).Days) ngày nữa)</small>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-x display-1 text-muted"></i>
+                        <h4 class="mt-3">Chưa có lịch làm việc</h4>
+                        <p class="text-muted">Hiện tại chưa có lịch làm việc nào được phân công.</p>
+                        <a href="@Url.Action("Index")" class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại Dashboard
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterSchedule(filter) {
+            const rows = document.querySelectorAll('.schedule-row');
+            const buttons = document.querySelectorAll('.btn-group-vertical .btn');
+            
+            // Reset button states
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-outline-primary', 'btn-outline-success', 'btn-outline-info', 'btn-outline-warning');
+                btn.classList.remove('btn-primary', 'btn-success', 'btn-info', 'btn-warning');
+            });
+            
+            // Set active button
+            event.target.classList.add('active');
+            if (filter === 'all') event.target.classList.replace('btn-outline-primary', 'btn-primary');
+            if (filter === 'today') event.target.classList.replace('btn-outline-success', 'btn-success');
+            if (filter === 'upcoming') event.target.classList.replace('btn-outline-info', 'btn-info');
+            if (filter === 'past') event.target.classList.replace('btn-outline-warning', 'btn-warning');
+            
+            // Filter rows
+            rows.forEach(row => {
+                if (filter === 'all' || row.dataset.filter === filter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // Initialize with 'all' filter
+        document.addEventListener('DOMContentLoaded', function() {
+            filterSchedule('all');
+        });
+    </script>
+}

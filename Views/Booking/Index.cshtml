@@ -1,0 +1,104 @@
+﻿@model List<Showtime>
+@{
+    ViewData["Title"] = "Đặt vé - " + ViewBag.Movie.Title;
+    var movie = ViewBag.Movie as Movie;
+    var today = DateTime.Now.Date;
+    var tomorrow = today.AddDays(1);
+
+    var showtimes = ViewBag.Showtimes as List<Showtime>;
+    var todayShowtimes = showtimes?.Where(s => s.ShowDateTime.Date == today).ToList() ?? new List<Showtime>();
+    var tomorrowShowtimes = showtimes?.Where(s => s.ShowDateTime.Date == tomorrow).ToList() ?? new List<Showtime>();
+}
+
+<div class="container my-5">
+    <!-- Movie Details Section -->
+    <div class="movie-details-container">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="movie-poster-container">
+                    <img src="@(movie.PosterPath.StartsWith("http") ? movie.PosterPath :
+                              movie.PosterPath.StartsWith("/") ? movie.PosterPath :
+                              $"https://image.tmdb.org/t/p/w500/{movie.PosterPath}")"
+                         alt="@movie.Title"
+                         class="movie-poster img-fluid"
+                         onerror="this.src='/images/default-movie-poster.jpg'">
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="movie-info-container">
+                    <h1 class="movie-title">@movie.Title</h1>
+                    <p class="movie-overview">@movie.Overview</p>
+                    <div class="movie-meta">
+                        <div class="rating-badge">
+                            <i class="fas fa-star"></i>
+                            <span>@movie.VoteAverage.ToString("0.0")</span>
+                        </div>
+                        <div class="release-date">
+                            <i class="far fa-calendar-alt"></i>
+                            <span>Ngày khởi chiếu: @movie.ReleaseDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theater Accordion Section -->
+    <div class="theater-card mt-4">
+        <div class="card-header">
+            <h3><i class="fas fa-building me-2"></i>Chọn cụm rạp & lịch chiếu</h3>
+        </div>
+        <div class="card-body">
+            <div id="theater-accordion-container">
+                <div class="text-center text-muted">Đang tải danh sách rạp...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load theater button list via AJAX
+            var movieId = @movie.Id;
+            fetch('/Booking/GetTheatersByMovie?movieId=' + movieId)
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('theater-accordion-container').innerHTML = html;
+                });
+
+            // Delegate click event for theater buttons
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.theater-btn')) {
+                    var btn = e.target;
+                    var theaterId = btn.getAttribute('data-theater-id');
+                    var movieId = btn.getAttribute('data-movie-id');
+                    // Ẩn tất cả showtimes-container
+                    document.querySelectorAll('.showtimes-container').forEach(function(c) {
+                        c.style.display = 'none';
+                    });
+                    // Bỏ active tất cả button
+                    document.querySelectorAll('.theater-btn').forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    // Active button hiện tại
+                    btn.classList.add('active');
+                    var container = document.getElementById('showtimes-container-' + theaterId);
+                    if (!container.dataset.loaded) {
+                        container.innerHTML = '<div class="text-center text-muted">Đang tải lịch chiếu...</div>';
+                        fetch(`/Booking/GetShowtimesByTheater?movieId=${movieId}&theaterId=${theaterId}`)
+                            .then(res => res.text())
+                            .then(html => {
+                                container.innerHTML = html;
+                                container.dataset.loaded = '1';
+                                container.style.display = 'block';
+                            });
+                    } else {
+                        container.style.display = 'block';
+                    }
+                }
+            });
+        });
+    </script>
+}
+

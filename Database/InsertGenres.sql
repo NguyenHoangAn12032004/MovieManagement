@@ -1,0 +1,20 @@
+-- Script to insert Vietnamese genre names into the Genres table
+INSERT INTO Genres (Name) VALUES (N'Hành Động');
+INSERT INTO Genres (Name) VALUES (N'Phiêu Lưu');
+INSERT INTO Genres (Name) VALUES (N'Hoạt Hình');
+INSERT INTO Genres (Name) VALUES (N'Hài');
+INSERT INTO Genres (Name) VALUES (N'Tội Phạm');
+INSERT INTO Genres (Name) VALUES (N'Tài Liệu');
+INSERT INTO Genres (Name) VALUES (N'Chính Kịch');
+INSERT INTO Genres (Name) VALUES (N'Gia Đình');
+INSERT INTO Genres (Name) VALUES (N'Giả Tưởng');
+INSERT INTO Genres (Name) VALUES (N'Lịch Sử');
+INSERT INTO Genres (Name) VALUES (N'Kinh Dị');
+INSERT INTO Genres (Name) VALUES (N'Âm Nhạc');
+INSERT INTO Genres (Name) VALUES (N'Bí Ẩn');
+INSERT INTO Genres (Name) VALUES (N'Lãng Mạn');
+INSERT INTO Genres (Name) VALUES (N'Khoa Học Viễn Tưởng');
+INSERT INTO Genres (Name) VALUES (N'Chương Trình Truyền Hình');
+INSERT INTO Genres (Name) VALUES (N'Kinh Dị');
+INSERT INTO Genres (Name) VALUES (N'Chiến Tranh');
+INSERT INTO Genres (Name) VALUES (N'Cao Bồi Miền Tây'); 

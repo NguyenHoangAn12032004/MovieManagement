@@ -1,0 +1,203 @@
+@model MovieManagement.Models.Concession
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Chi tiết sản phẩm: @Model.Name
+                    </h3>
+                    <div class="card-tools">
+                        <div class="btn-group">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit mr-1"></i>
+                                Chỉnh sửa
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left mr-1"></i>
+                                Quay lại
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <!-- Product Image -->                            <div class="text-center mb-4">
+                                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                {
+                                    <img src="@Model.ImagePath" alt="@Model.Name" class="img-fluid rounded shadow" style="max-height: 300px;">
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded shadow" style="height: 300px;">
+                                        <div class="text-center">
+                                            <i class="fas fa-image fa-4x text-muted mb-2"></i>
+                                            <p class="text-muted">Không có hình ảnh</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Status Card -->
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Trạng thái</h5>
+                                    @if (Model.IsAvailable)
+                                    {
+                                        <span class="badge badge-success badge-lg">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Có sẵn
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-danger badge-lg">
+                                            <i class="fas fa-times mr-1"></i>
+                                            Hết hàng
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <!-- Product Details -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-primary">
+                                            <i class="fas fa-tag"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Tên sản phẩm</span>
+                                            <span class="info-box-number">@Model.Name</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-success">
+                                            <i class="fas fa-money-bill-wave"></i>
+                                        </span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">Giá bán</span>
+                                            <span class="info-box-number">@Model.Price.ToString("N0") đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-align-left mr-2"></i>
+                                        Mô tả sản phẩm
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    @if (!string.IsNullOrEmpty(Model.Description))
+                                    {
+                                        <p class="card-text">@Model.Description</p>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Chưa có mô tả cho sản phẩm này.
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Additional Info -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-info mr-2"></i>
+                                        Thông tin bổ sung
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">ID sản phẩm:</dt>
+                                        <dd class="col-sm-8">@Model.Id</dd>                                        <dt class="col-sm-4">Đường dẫn hình ảnh:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (!string.IsNullOrEmpty(Model.ImagePath))
+                                            {
+                                                <a href="@Model.ImagePath" target="_blank" class="text-primary">
+                                                    @(Model.ImagePath.Length > 50 ? Model.ImagePath.Substring(0, 50) + "..." : Model.ImagePath)
+                                                    <i class="fas fa-external-link-alt ml-1"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Không có</span>
+                                            }
+                                        </dd>
+
+                                        <dt class="col-sm-4">Trạng thái hiển thị:</dt>
+                                        <dd class="col-sm-8">
+                                            @if (Model.IsAvailable)
+                                            {
+                                                <span class="text-success">
+                                                    <i class="fas fa-eye mr-1"></i>
+                                                    Hiển thị với khách hàng
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger">
+                                                    <i class="fas fa-eye-slash mr-1"></i>
+                                                    Ẩn khỏi khách hàng
+                                                </span>
+                                            }
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="btn-group">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit mr-1"></i>
+                            Chỉnh sửa
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            <i class="fas fa-trash mr-1"></i>
+                            Xóa
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-list mr-1"></i>
+                            Danh sách sản phẩm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-lg {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    .info-box-number {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+</style>

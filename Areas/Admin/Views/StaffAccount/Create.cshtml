@@ -1,0 +1,269 @@
+@model MovieManagement.Areas.Admin.Models.CreateStaffAccountViewModel
+
+@{
+    ViewData["Title"] = "Tạo tài khoản nhân viên";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3">Tạo tài khoản nhân viên</h1>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post" id="createStaffAccountForm">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="StaffId" class="form-label">Chọn nhân viên</label>
+                        <select asp-for="StaffId" class="form-select" required id="staffSelect">
+                            <option value="">-- Chọn nhân viên --</option>
+                            @foreach (var staff in ViewBag.Staffs as List<MovieManagement.Models.Staff>)
+                            {
+                                <option value="@staff.Id" data-email="@staff.Email" data-name="@staff.FullName" data-position="@staff.Position">
+                                    @staff.FullName - @staff.Email (@staff.Position)
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="StaffId" class="text-danger"></span>
+                        
+                        <!-- Hiển thị thông tin nhân viên được chọn -->
+                        <div id="selectedStaffInfo" class="mt-2" style="display: none;">
+                            <div class="alert alert-info">
+                                <strong>Thông tin nhân viên:</strong><br>
+                                <span id="staffName"></span><br>
+                                <span id="staffEmail"></span><br>
+                                <span id="staffPosition"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Mật khẩu</label>
+                        <div class="input-group">
+                            <input asp-for="Password" type="password" class="form-control" required id="passwordInput" />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="form-text">
+                            Mật khẩu phải có ít nhất 6 ký tự.
+                            <div id="passwordStrength" class="mt-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" required id="confirmPasswordInput" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        <div id="passwordMatch" class="form-text"></div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a asp-action="Index" class="btn btn-secondary me-md-2">Hủy</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span id="submitText">Tạo tài khoản</span>
+                            <span id="submitSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Hướng dẫn</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">Quy trình tạo tài khoản:</h6>
+                    <ol class="small">
+                        <li>Chọn nhân viên từ danh sách</li>
+                        <li>Nhập mật khẩu mạnh (ít nhất 6 ký tự)</li>
+                        <li>Xác nhận mật khẩu</li>
+                        <li>Xác nhận tạo tài khoản</li>
+                    </ol>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-success">Tài khoản sẽ có:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Role "Staff"</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Email đã xác thực</li>
+                        <li><i class="bi bi-check-circle text-success me-2"></i>Quyền truy cập Staff Area</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Chỉ hiển thị nhân viên chưa có tài khoản. Tài khoản sẽ sử dụng email của nhân viên làm username.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thống kê nhanh -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Thống kê</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="text-primary h4">@((ViewBag.Staffs as List<MovieManagement.Models.Staff>)?.Count ?? 0)</div>
+                        <small class="text-muted">Nhân viên chưa có tài khoản</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-success h4">@ViewBag.TotalStaffAccounts</div>
+                        <small class="text-muted">Đã có tài khoản</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Hiển thị thông tin nhân viên khi chọn
+            $('#staffSelect').change(function() {
+                var selectedOption = $(this).find('option:selected');
+                if (selectedOption.val()) {
+                    var name = selectedOption.data('name');
+                    var email = selectedOption.data('email');
+                    var position = selectedOption.data('position');
+                    
+                    $('#staffName').text('Họ tên: ' + name);
+                    $('#staffEmail').text('Email: ' + email);
+                    $('#staffPosition').text('Vị trí: ' + position);
+                    $('#selectedStaffInfo').show();
+                } else {
+                    $('#selectedStaffInfo').hide();
+                }
+            });
+
+            // Toggle hiển thị password
+            $('#togglePassword').click(function() {
+                var passwordInput = $('#passwordInput');
+                var icon = $('#togglePasswordIcon');
+                
+                if (passwordInput.attr('type') === 'password') {
+                    passwordInput.attr('type', 'text');
+                    icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                } else {
+                    passwordInput.attr('type', 'password');
+                    icon.removeClass('bi-eye-slash').addClass('bi-eye');
+                }
+            });
+
+            // Kiểm tra độ mạnh password
+            $('#passwordInput').keyup(function() {
+                var password = $(this).val();
+                var strength = checkPasswordStrength(password);
+                $('#passwordStrength').html(strength.html).removeClass().addClass(strength.class);
+            });
+
+            // Kiểm tra password khớp
+            $('#confirmPasswordInput').keyup(function() {
+                var password = $('#passwordInput').val();
+                var confirmPassword = $(this).val();
+                var matchDiv = $('#passwordMatch');
+                
+                if (confirmPassword.length > 0) {
+                    if (password === confirmPassword) {
+                        matchDiv.html('<i class="bi bi-check-circle text-success"></i> Mật khẩu khớp')
+                                .removeClass('text-danger').addClass('text-success');
+                    } else {
+                        matchDiv.html('<i class="bi bi-x-circle text-danger"></i> Mật khẩu không khớp')
+                                .removeClass('text-success').addClass('text-danger');
+                    }
+                } else {
+                    matchDiv.html('').removeClass('text-success text-danger');
+                }
+            });
+
+            // Xử lý submit form
+            $('#createStaffAccountForm').submit(function(e) {
+                var selectedStaff = $('#staffSelect option:selected');
+                if (!selectedStaff.val()) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn nhân viên');
+                    return false;
+                }
+
+                // Hiển thị confirmation
+                var staffName = selectedStaff.data('name');
+                var staffEmail = selectedStaff.data('email');
+                
+                if (!confirm(`Bạn có chắc chắn muốn tạo tài khoản cho nhân viên:\n\nHọ tên: ${staffName}\nEmail: ${staffEmail}\n\nTài khoản sẽ được tạo với role "Staff".`)) {
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Hiển thị loading
+                $('#submitBtn').prop('disabled', true);
+                $('#submitText').text('Đang tạo...');
+                $('#submitSpinner').show();
+            });
+
+            function checkPasswordStrength(password) {
+                var score = 0;
+                var recommendations = [];
+                
+                if (password.length >= 6) score++;
+                else recommendations.push('ít nhất 6 ký tự');
+                
+                if (password.match(/[a-z]/)) score++;
+                else recommendations.push('chữ thường');
+                
+                if (password.match(/[A-Z]/)) score++;
+                else recommendations.push('chữ hoa');
+                
+                if (password.match(/[0-9]/)) score++;
+                else recommendations.push('chữ số');
+                
+                if (password.match(/[^a-zA-Z0-9]/)) score++;
+                else recommendations.push('ký tự đặc biệt');
+
+                var result = { html: '', class: 'form-text' };
+                
+                if (password.length === 0) {
+                    return result;
+                }
+                
+                if (score < 2) {
+                    result.html = '<i class="bi bi-shield-x text-danger"></i> Yếu';
+                    result.class = 'form-text text-danger';
+                } else if (score < 4) {
+                    result.html = '<i class="bi bi-shield-check text-warning"></i> Trung bình';
+                    result.class = 'form-text text-warning';
+                } else {
+                    result.html = '<i class="bi bi-shield-check text-success"></i> Mạnh';
+                    result.class = 'form-text text-success';
+                }
+                
+                if (recommendations.length > 0) {
+                    result.html += '<br><small>Cần thêm: ' + recommendations.join(', ') + '</small>';
+                }
+                
+                return result;
+            }
+        });
+    </script>
+}

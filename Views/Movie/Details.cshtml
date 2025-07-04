@@ -1,0 +1,228 @@
+﻿@model MovieManagement.Models.Movie
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="movie-banner position-relative mb-5">
+    <div class="banner-backdrop" style="background-image: url('@Model.BackdropPath');">
+        <div class="banner-overlay"></div>
+    </div>
+    <div class="container position-relative py-5">
+        <div class="row align-items-center">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="position-relative movie-poster-wrapper">
+                    <img src="@Model.PosterPath" alt="@Model.Title" class="img-fluid rounded shadow-lg movie-poster">
+                    @if (Model.IsFeatured)
+                    {
+                        <div class="position-absolute top-0 start-0 m-2">
+                            <span class="badge bg-danger">Phim đặc sắc</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="ps-md-4 text-white movie-details">
+                    <h1 class="display-4 fw-bold mb-3">@Model.Title</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-star text-warning me-2"></i>
+                            <span class="h5 mb-0">@Model.VoteAverage.ToString("0.0")</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="far fa-calendar-alt me-2"></i>
+                            <span>@Model.ReleaseDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="far fa-clock me-2"></i>
+                            <span>@Model.Duration phút</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <span class="badge bg-primary me-2 mb-2">@Model.Language</span>
+                        @foreach (var genre in System.Text.Json.JsonSerializer.Deserialize<List<string>>(Model.GenreNames))
+                        {
+                            <span class="badge bg-secondary me-2 mb-2">@genre</span>
+                        }
+                    </div>
+                    <div class="mb-4">
+                        <h5 class="border-start border-primary border-3 ps-2">Đạo diễn</h5>
+                        <p>@Model.Director</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5 class="border-start border-primary border-3 ps-2">Tổng quan</h5>
+                        <p>@Model.Overview</p>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h5 class="border-start border-primary border-3 ps-2">Diễn viên</h5>
+                            <p>@Model.Cast</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="border-start border-primary border-3 ps-2">Thông tin phim</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-calendar-day text-primary me-2"></i> <strong>Ngày ra mắt:</strong> @Model.ReleaseDate.ToString("dd/MM/yyyy")</li>
+                                <li class="mb-2"><i class="fas fa-clock text-primary me-2"></i> <strong>Thời lượng:</strong> @Model.Duration phút</li>
+                                <li class="mb-2"><i class="fas fa-film text-primary me-2"></i> <strong>Trạng thái:</strong> @Model.Status</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        @if (!Model.IsComingSoon)
+                        {
+                            <a asp-controller="Booking" asp-action="Index" asp-route-movieId="@Model.Id" 
+                               class="btn btn-primary btn-lg px-4 py-2 fw-bold">
+                                <i class="fas fa-ticket-alt me-2"></i>Mua Vé Ngay
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="btn btn-secondary btn-lg px-4 py-2 fw-bold">
+                                <i class="fas fa-clock me-2"></i>Phim Sắp Chiếu
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                        {
+                            <button class="btn btn-outline-light btn-lg px-4 py-2 fw-bold" 
+                                    onclick="playTrailer('@Model.TrailerUrl')">
+                                <i class="fas fa-play me-2"></i>Xem Trailer
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.TrailerUrl))
+{
+    <div id="trailerModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content bg-dark">
+                <div class="modal-body p-0">
+                    <button type="button" class="btn-close btn-close-white position-absolute end-0 top-0 m-3" data-bs-dismiss="modal"></button>
+                    <div class="ratio ratio-16x9">
+                        <iframe id="trailerFrame" src="" title="@Model.Title Trailer" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .movie-banner {
+            margin-top: 0; /* Changed from -70px to avoid navbar overlap */
+            background-color: #141414;
+            overflow: hidden;
+            padding-top: 80px; /* Added to compensate for navbar height */
+        }
+
+        .banner-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(2px);
+        }
+
+        .banner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(20, 20, 20, 0.95) 0%, rgba(20, 20, 20, 0.7) 100%);
+        }
+
+        .movie-poster-wrapper {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            transform: translateY(0); /* Changed from 20px */
+            animation: fadeIn 1s ease;
+        }
+
+        .movie-poster {
+            width: 100%;
+            height: auto;
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+
+        .movie-details {
+            animation: fadeIn 1s ease 0.3s;
+            animation-fill-mode: both;
+        }
+
+        .banner-overview {
+            max-width: 800px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary, .btn-outline-light, .btn-secondary {
+            transition: all 0.3s;
+            border-radius: 50px;
+        }
+
+        .btn-primary:hover, .btn-outline-light:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-outline-light {
+            border-width: 2px;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .movie-banner {
+                padding-top: 60px;
+            }
+            
+            .movie-details {
+                padding-top: 1rem;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function playTrailer(url) {
+            // Format YouTube URL for embedding if it's a watch URL
+            if (url.includes('youtube.com/watch?v=')) {
+                url = url.replace('watch?v=', 'embed/');
+            }
+            // Add autoplay parameter
+            if (!url.includes('autoplay=1')) {
+                url += (url.includes('?') ? '&' : '?') + 'autoplay=1';
+            }
+            
+            document.getElementById('trailerFrame').src = url;
+            var modal = new bootstrap.Modal(document.getElementById('trailerModal'));
+            modal.show();
+        }
+
+        // Clean up iframe src when modal is hidden
+        document.getElementById('trailerModal')?.addEventListener('hidden.bs.modal', function () {
+            document.getElementById('trailerFrame').src = '';
+        });
+    </script>
+}
+

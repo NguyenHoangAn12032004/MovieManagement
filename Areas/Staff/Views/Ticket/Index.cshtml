@@ -1,0 +1,95 @@
+@model IEnumerable<MovieManagement.Models.CartItem>
+
+@{
+    ViewData["Title"] = "Xử lý vé";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1 class="h3 mb-4">Danh sách vé cần xử lý</h1>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Mã vé</th>
+                        <th>Khách hàng</th>
+                        <th>Phim</th>
+                        <th>Suất chiếu</th>
+                        <th>Ghế</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>#@item.Id</td>
+                                <td>@item.User?.Email</td>
+                                <td>@item.Showtime?.Movie?.Title</td>
+                                <td>
+                                    @if (item.Showtime != null)
+                                    {
+                                        @item.Showtime.ShowDateTime.ToString("dd/MM/yyyy HH:mm")
+                                    }
+                                </td>
+                                <td>@item.SeatNames</td>
+                                <td>@item.TotalAmount.ToString("C0")</td>
+                                <td>
+                                    @switch (item.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-warning">Chờ thanh toán</span>
+                                            break;
+                                        case "Processing":
+                                            <span class="badge bg-info">Đang xử lý</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@item.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (item.Status == "Pending" || item.Status == "Processing")
+                                        {
+                                            <form asp-action="ConfirmPayment" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Xác nhận thanh toán cho vé này?')">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="CancelTicket" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hủy vé này?')">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                Không có vé nào cần xử lý.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

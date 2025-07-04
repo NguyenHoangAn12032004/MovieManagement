@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Không có quyền truy cập";
+    Layout = "/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Không có quyền truy cập</h3>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-lock-fill text-danger" style="font-size: 5rem;"></i>
+                    <h4 class="mt-4">Bạn không có quyền truy cập vào trang này</h4>
+                    <p class="text-muted mb-4">Vui lòng liên hệ quản trị viên nếu bạn tin rằng đây là lỗi.</p>
+                    
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Quay lại trang trước
+                        </a>
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                            <i class="bi bi-house-door me-2"></i>Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,132 @@
+@using Microsoft.AspNetCore.Identity
+@using MovieManagement.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout !=  null)
+    {
+        Layout = parentLayout.ToString();
+    }
+    else
+    {
+        Layout = "/Areas/Identity/Pages/Shared/_Layout.cshtml";
+    }
+}
+
+<div class="account-management py-5" style="background: linear-gradient(to right, #f8f9fa, #ffffff);">
+    <div class="container" style="padding-top: 2rem;">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                    <div class="position-relative">
+                        <div class="bg-primary rounded-circle position-absolute" style="width: 50px; height: 50px; opacity: 0.1; left: -10px; top: -10px;"></div>
+                        <i class="fas fa-user-shield text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h1 class="text-primary mb-1 fw-bold" style="font-size: 2rem;">Quản lý tài khoản của bạn</h1>
+                        <p class="text-muted mb-0">Quản lý thông tin và bảo mật tài khoản của bạn</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-gradient p-3" style="background: linear-gradient(45deg, #4e73df, #224abe);">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-cog text-white me-2"></i>
+                            <h5 class="card-title mb-0 text-white">Cài đặt tài khoản</h5>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <partial name="_ManageNav" />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-9">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .account-management {
+        min-height: 100vh;
+        background-attachment: fixed;
+    }
+
+    .nav-pills .nav-link {
+        color: #495057;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: #f8f9fa;
+        color: #4e73df;
+        transform: translateX(5px);
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #e7f1ff;
+        color: #4e73df;
+        border-left: 4px solid #4e73df;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .bg-gradient {
+        background: linear-gradient(45deg, #4e73df, #224abe);
+    }
+
+    .text-primary {
+        color: #4e73df !important;
+    }
+
+    .btn-primary {
+        background: #4e73df;
+        border-color: #4e73df;
+    }
+
+    .btn-primary:hover {
+        background: #224abe;
+        border-color: #224abe;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #4e73df;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #224abe;
+    }
+</style>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+} 

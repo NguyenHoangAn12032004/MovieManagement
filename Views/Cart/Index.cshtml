@@ -1,0 +1,600 @@
+@model MovieManagement.Models.Cart
+@using Microsoft.AspNetCore.Identity
+@using MovieManagement.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var isAdmin = User.IsInRole("Admin");
+}
+
+<div class="container mt-4">
+    <h2><i class="fas fa-shopping-cart me-2"></i>Giỏ hàng của tôi</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (!Model.Items.Any())
+    {
+        <div class="alert alert-info">
+            <p>Giỏ hàng của bạn đang trống.</p> 
+            <div class="mt-3 d-flex gap-3">
+                <a href="@Url.Action("Index", "Movie")" class="btn btn-primary">
+                    <i class="fas fa-film me-2"></i>Xem phim
+                </a>
+                <a href="@Url.Action("Index", "Concession")" class="btn btn-outline-primary">
+                    <i class="fas fa-utensils me-2"></i>Mua bắp nước
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+        @{
+            var totalTickets = Model.Items.Where(i => i.ShowtimeId > 0).Sum(i => i.SelectedSeats?.Split(',', StringSplitOptions.RemoveEmptyEntries).Length ?? 0);
+            var totalConcessions = Model.Items.SelectMany(i => i.ConcessionItems ?? new List<ConcessionItem>()).Sum(ci => ci.Quantity);
+            var totalItems = totalTickets + totalConcessions;
+        }
+        
+        <div class="col-md-12 mb-4">
+            <div class="alert alert-light border">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Tổng cộng: @totalItems sản phẩm</h5>
+                        <div class="text-muted small">
+                            @if (totalTickets > 0)
+                            {
+                                <span>@totalTickets vé xem phim</span>
+                            }
+                            @if (totalTickets > 0 && totalConcessions > 0)
+                            {
+                                <span> • </span>
+                            }
+                            @if (totalConcessions > 0)
+                            {
+                                <span>@totalConcessions món bắp nước</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-muted">Tổng tiền:</span>
+                        <span class="fs-4 ms-2 fw-bold">@Model.Items.Sum(i => i.TotalAmount).ToString("N0") đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        @foreach (var item in Model.Items)
+        {
+            var hasConcessions = item.ConcessionItems != null && item.ConcessionItems.Any();
+            var hasTickets = item.ShowtimeId > 0 && !string.IsNullOrEmpty(item.SelectedSeats);
+            var discountAmount = hasConcessions ? item.ConcessionItems?.Sum(ci => ci.Discount) ?? 0 : 0;
+            
+            <!-- Debug information -->
+            @if (Context.Request.Query.ContainsKey("debug"))
+            {
+                <div class="alert alert-warning">
+                    <strong>Debug Item @item.Id:</strong><br>
+                    ShowtimeId: @item.ShowtimeId<br>
+                    SelectedSeats: @item.SelectedSeats<br>
+                    SeatNames: @item.SeatNames<br>
+                    HasTickets: @hasTickets<br>
+                    ConcessionItems: @(item.ConcessionItems?.Count ?? 0) items<br>
+                    HasConcessions: @hasConcessions<br>
+                    @if (item.ConcessionItems != null)
+                    {
+                        @foreach (var ci in item.ConcessionItems)
+                        {
+                            <span>- @ci.Concession?.Name x@ci.Quantity<br></span>
+                        }
+                    }
+                </div>
+            }
+            
+            <div class="col-md-12 mb-4" id="cart-item-@item.Id">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            @if (hasTickets)
+                            {
+                                <h5 class="mb-0">
+                                    <i class="fas fa-film me-2"></i>@item.Showtime.Movie.Title
+                                    @if (hasConcessions)
+                                    {
+                                        <span class="badge bg-info ms-2">Combo</span>
+                                    }
+                                </h5>
+                                <div class="text-muted small">
+                                    <i class="far fa-clock me-1"></i>@item.Showtime.ShowDateTime.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            }
+                            else
+                            {
+                                <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Đồ ăn & Nước uống</h5>
+                            }
+                            
+                            @if (item.TransferredFromUser != null)
+                            {
+                                <div class="text-success small">
+                                    <i class="fas fa-exchange-alt me-1"></i>Được chuyển từ @item.TransferredFromUser.Email
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="text-end">
+                            @if (item.Status == "Pending")
+                            {
+                                <span class="badge bg-warning">Chờ thanh toán</span>
+                            }
+                            else if (item.Status == "Processing")
+                            {
+                                <span class="badge bg-info">Đang xử lý</span>
+                            }
+                            else if (item.Status == "Completed")
+                            {
+                                <span class="badge bg-success">Đã thanh toán</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">@item.Status</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Movie and ticket details -->
+                            @if (hasTickets)
+                            {
+                                <div class="@(hasConcessions ? "col-md-6 border-end" : "col-md-12")">
+                                    <h6 class="card-subtitle mb-3"><i class="fas fa-ticket-alt me-2"></i>Thông tin vé</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <strong>Ghế:</strong>
+                                        <span>@item.SeatNames</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Giá vé:</strong>
+                                        @{
+                                            decimal displayTicketPrice = 0;
+                                            if (hasConcessions && item.ConcessionItems != null && item.ConcessionItems.Any())
+                                            {
+                                                // For combo items: need to get original ticket price
+                                                // Since we have discount on concessions, we need to calculate differently
+                                                var originalConcessionPrice = item.ConcessionItems.Sum(ci => ci.Price * ci.Quantity);
+                                                var discountOnConcessions = item.ConcessionItems.Sum(ci => ci.Discount);
+                                                // Original total would be: TicketPrice + OriginalConcessionPrice
+                                                // Current total is: TotalAmount
+                                                // So: TicketPrice = TotalAmount + DiscountOnConcessions - OriginalConcessionPrice + ConcessionAfterDiscount
+                                                // Simplified: TotalAmount - ConcessionAfterDiscount + DiscountOnConcessions = TicketPrice + DiscountOnConcessions
+                                                var concessionAfterDiscount = item.ConcessionItems.Sum(ci => ci.TotalPrice);
+                                                // TotalAmount = TicketPrice + ConcessionAfterDiscount
+                                                displayTicketPrice = item.TotalAmount - concessionAfterDiscount;
+                                                
+                                                // If this gives wrong result, assume seat type based on name
+                                                if (displayTicketPrice < 40000) // Too low, recalculate based on seat type
+                                                {
+                                                    var seatCount = string.IsNullOrEmpty(item.SelectedSeats) ? 1 : 
+                                                        item.SelectedSeats.Split(',', StringSplitOptions.RemoveEmptyEntries).Length;
+                                                    // Guess price based on seat names
+                                                    if (item.SeatNames?.Contains("A") == true || item.SeatNames?.Contains("B") == true)
+                                                        displayTicketPrice = 50000 * seatCount; // Standard
+                                                    else if (item.SeatNames?.Contains("G") == true || item.SeatNames?.Contains("H") == true)
+                                                        displayTicketPrice = 95000 * seatCount; // Couple
+                                                    else
+                                                        displayTicketPrice = 80000 * seatCount; // VIP (C,D,E,F)
+                                                }
+                                            }
+                                            else
+                                            {
+                                                displayTicketPrice = item.TotalAmount;
+                                            }
+                                        }
+                                        <span>@displayTicketPrice.ToString("N0") đ</span>
+                                    </div>
+                                </div>
+                            }
+                            
+                            <!-- Concession details -->
+                            @if (hasConcessions)
+                            {
+                                <div class="@(hasTickets ? "col-md-6" : "col-md-12")">
+                                    <h6 class="card-subtitle mb-3">
+                                        <i class="fas fa-utensils me-2"></i>Bắp nước & Đồ ăn
+                                        @if (discountAmount > 0)
+                                        {
+                                            <span class="badge bg-success ms-2">Giảm 5%</span>
+                                        }
+                                    </h6>
+                                    <div class="concession-items">
+                                        @if (item.ConcessionItems != null)
+                                        {
+                                            @foreach (var concessionItem in item.ConcessionItems)
+                                            {
+                                            <div class="d-flex align-items-center mb-2 p-2 border-bottom">
+                                                <div class="flex-shrink-0 me-3">
+                                                    @if (!string.IsNullOrEmpty(concessionItem.Concession.ImagePath))
+                                                    {
+                                                        <img src="@concessionItem.Concession.ImagePath" class="rounded" width="40" height="40" alt="@concessionItem.Concession.Name">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width:40px;height:40px">
+                                                            @if (concessionItem.Concession.Type == ConcessionType.Food)
+                                                            {
+                                                                <i class="fas fa-hamburger"></i>
+                                                            }
+                                                            else if (concessionItem.Concession.Type == ConcessionType.Drink)
+                                                            {
+                                                                <i class="fas fa-glass-cheers"></i>
+                                                            }
+                                                            else
+                                                            {
+                                                                <i class="fas fa-box"></i>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="fw-bold">@concessionItem.Concession.Name</span>
+                                                            <span class="badge bg-secondary ms-2">x@(concessionItem.Quantity)</span>
+                                                        </div>
+                                                        <div>
+                                                            @if (concessionItem.Discount > 0)
+                                                            {
+                                                                <span class="text-decoration-line-through text-muted me-2">@((concessionItem.Price * concessionItem.Quantity).ToString("N0")) đ</span>
+                                                                <span class="text-success fw-bold">@(concessionItem.TotalPrice.ToString("N0")) đ</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="fw-bold">@(concessionItem.TotalPrice.ToString("N0")) đ</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(concessionItem.Concession.Description))
+                                                    {
+                                                        <div class="text-muted small">@concessionItem.Concession.Description</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="fs-5">Tổng tiền: @item.TotalAmount.ToString("N0") đ</strong>
+                            @if (discountAmount > 0)
+                            {
+                                <div class="text-success small">Đã giảm: @discountAmount.ToString("N0") đ</div>
+                            }
+                        </div>
+                        <div class="d-flex gap-2">
+                            @if (item.Status == "Pending")
+                            {
+                                <a href="@Url.Action("PaymentConfirm", "Booking", new { cartItemId = item.Id })" 
+                                    class="btn btn-success btn-sm">
+                                    <i class="fas fa-credit-card me-1"></i>Thanh toán
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-btn" data-cart-item-id="@item.Id">
+                                    <i class="fas fa-trash-alt me-1"></i>Xóa
+                                </button>
+                            }
+                            else if (item.Status == "Completed" && isAdmin)
+                            {
+                                <button type="button" class="btn btn-info btn-sm" onclick="showTransferModal(@item.Id)">
+                                    <i class="fas fa-exchange-alt me-1"></i>Chuyển vé
+                                </button>
+                            }
+                            
+                            @if (item.Status != "Pending")
+                            {
+                                <a href="@Url.Action("Details", "Booking", new { id = item.Id })" 
+                                    class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Xem chi tiết
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+    }
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Xác nhận xóa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn xóa đơn hàng này khỏi giỏ hàng?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Xác nhận xóa</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isAdmin)
+{
+    <!-- Modal chọn khách hàng -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chọn khách hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="customerSearch" 
+                               placeholder="Tìm kiếm khách hàng...">
+                    </div>
+                    <div id="customerList" class="list-group">
+                        <!-- Danh sách khách hàng sẽ được thêm vào đây -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/concession.css" />
+    <style>
+        .checkmark-circle {
+            stroke-dasharray: 166;
+            stroke-dashoffset: 166;
+            stroke-width: 2;
+            stroke-miterlimit: 10;
+            stroke: #28a745;
+            fill: none;
+        }
+        
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: block;
+            stroke-width: 6;
+            stroke: #fff;
+            stroke-miterlimit: 10;
+        }
+        
+        .checkmark-check {
+            transform-origin: 50% 50%;
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+        }
+        
+        .item-removed {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        
+        @@keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedCartItemId = null;
+            
+            $('.remove-btn').click(function() {
+                const cartItemId = $(this).data('cart-item-id');
+                $('#deleteConfirmModal').modal('show');
+                
+                // Store the ID of the item to remove
+                $('#confirmDelete').data('cart-item-id', cartItemId);
+            });
+            
+            // Handle confirm delete button click
+            $('#confirmDelete').click(function() {
+                const cartItemId = $(this).data('cart-item-id');
+                const button = $(this);
+                
+                // Disable button and show loading
+                button.prop('disabled', true);
+                button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...');
+                
+                $.post('@Url.Action("RemoveFromCart", "Cart")', { cartItemId: cartItemId })
+                    .done(function(response) {
+                        $('#deleteConfirmModal').modal('hide');
+                        
+                        if (response.success) {
+                            // Add a CSS class for animation
+                            $(`#cart-item-${cartItemId}`).addClass('item-removed');
+                            
+                            // Remove the item after animation completes
+                            setTimeout(function() {
+                                $(`#cart-item-${cartItemId}`).remove();
+                                
+                                // If no items left, reload the page to show empty cart message
+                                if ($('.card.shadow-sm').length <= 1) {
+                                    location.reload();
+                                } else {
+                                    // Update the total at the bottom
+                                    updateCartTotal();
+                                }
+                            }, 500);
+                            
+                            showToast('Thành công', response.message, 'success');
+                            updateCartCount();
+                        } else {
+                            showToast('Lỗi', response.message, 'error');
+                            
+                            // Reset button
+                            button.prop('disabled', false);
+                            button.text('Xác nhận xóa');
+                        }
+                    })
+                    .fail(function() {
+                        $('#deleteConfirmModal').modal('hide');
+                        showToast('Lỗi', 'Có lỗi xảy ra khi xóa sản phẩm', 'error');
+                        
+                        // Reset button
+                        button.prop('disabled', false);
+                        button.text('Xác nhận xóa');
+                    });
+            });
+            
+            function showToast(title, message, type) {
+                if (typeof toastr !== 'undefined') {
+                    toastr[type](message, title);
+                } else {
+                    alert(title + ': ' + message);
+                }
+            }
+
+            // Chức năng chuyển vé
+            window.showTransferModal = function(cartItemId) {
+                selectedCartItemId = cartItemId;
+                $('#transferModal').modal('show');
+                $('#customerSearch').val('');
+                $('#customerList').empty();
+            };
+
+            $('#customerSearch').on('input', function() {
+                const searchTerm = $(this).val();
+                if (searchTerm.length >= 2) {
+                    $.get('@Url.Action("Search", "Users", new { area = "Admin" })', { term: searchTerm })
+                        .done(function(data) {
+                            const customerList = $('#customerList');
+                            customerList.empty();
+                            data.forEach(user => {
+                                customerList.append(`
+                                    <button type="button" class="list-group-item list-group-item-action"
+                                            onclick="transferTicket('${user.id}', '${user.email}')">
+                                        ${user.email}
+                                    </button>
+                                `);
+                            });
+                        })
+                        .fail(function() {
+                            showToast('Lỗi', 'Không thể tìm kiếm người dùng', 'error');
+                        });
+                }
+            });
+
+            window.transferTicket = function(customerId, customerEmail) {
+                if (!selectedCartItemId) return;
+
+                if (confirm(`Bạn có chắc chắn muốn chuyển vé này cho ${customerEmail}?`)) {
+                    $.ajax({
+                        url: '@Url.Action("TransferToCustomer", "Cart")',
+                        type: 'POST',
+                        data: { 
+                            cartItemId: selectedCartItemId,
+                            customerId: customerId
+                        },
+                        success: function(response) {
+                            $('#transferModal').modal('hide');
+                            if (response.success) {
+                                showToast('Thành công', response.message, 'success');
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                showToast('Lỗi', response.message, 'error');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $('#transferModal').modal('hide');
+                            console.error('Transfer error:', error);
+                            showToast('Lỗi', 'Có lỗi xảy ra khi chuyển vé', 'error');
+                        }
+                    });
+                }
+            };
+
+            function updateCartCount() {
+                $.get('@Url.Action("GetCartCount", "Cart")', function(count) {
+                    $('.cart-count').text(count);
+                });
+            }
+
+            // Function to update the cart total
+            function updateCartTotal() {
+                let totalAmount = 0;
+                
+                // Calculate the new total
+                $('.card-footer strong').each(function() {
+                    const priceText = $(this).text().trim();
+                    const price = parseInt(priceText.replace(/\D/g, ''));
+                    if (!isNaN(price)) {
+                        totalAmount += price;
+                    }
+                });
+                
+                // Update the total display
+                $('.col-md-12.mb-4:last h5:last').text(totalAmount.toLocaleString('vi-VN') + ' VNĐ');
+                
+                // Count items
+                const totalItems = $('.card.shadow-sm').length - 1; // Subtract the summary card
+                const ticketCount = $('.fas.fa-ticket-alt').length;
+                const concessionCount = $('.card-subtitle:contains("bắp nước")').length;
+                
+                // Update summary
+                if ($('.alert.alert-light.border').length) {
+                    $('.alert.alert-light.border h5').text(`Tổng cộng: ${totalItems} sản phẩm`);
+                    
+                    let summaryText = '';
+                    if (ticketCount > 0) {
+                        summaryText += `${ticketCount} vé xem phim`;
+                    }
+                    
+                    if (ticketCount > 0 && concessionCount > 0) {
+                        summaryText += ' • ';
+                    }
+                    
+                    if (concessionCount > 0) {
+                        summaryText += `${concessionCount} món bắp nước`;
+                    }
+                    
+                    $('.alert.alert-light.border .text-muted.small').text(summaryText);
+                    $('.alert.alert-light.border .fs-4.ms-2.fw-bold').text(totalAmount.toLocaleString('vi-VN') + ' đ');
+                }
+            }
+        });
+    </script>
+}
+
+@if (Model.Items.Any(i => i.Status == "Pending"))
+    {
+        <div class="position-fixed bottom-0 start-0 end-0 p-3 bg-light shadow-lg border-top" style="z-index: 1020;">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Tổng thanh toán:</strong>
+                        <span class="fs-4 ms-2">@Model.Items.Where(i => i.Status == "Pending").Sum(i => i.TotalAmount).ToString("N0") đ</span>
+                    </div>
+                    <a href="@Url.Action("PaymentConfirmAll", "Booking")" class="btn btn-success btn-lg">
+                        <i class="fas fa-credit-card me-2"></i>Thanh toán tất cả
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add padding at the bottom to prevent the fixed payment bar from covering content -->
+        <div style="height: 80px;"></div>
+    }

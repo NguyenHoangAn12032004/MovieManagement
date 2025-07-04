@@ -1,0 +1,1023 @@
+@model IEnumerable<MovieManagement.Models.Concession>
+
+@{
+    ViewData["Title"] = "Quản lý Bắp Nước";
+}
+
+<div class="container-fluid px-4">
+    <!-- Header Section -->
+    <div class="management-header">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1><i class="fas fa-utensils me-3"></i>Quản lý Bắp Nước</h1>
+                <p>Quản lý tất cả sản phẩm bắp nước và đồ uống trong rạp chiếu phim</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="action-buttons">
+                    <a href="@Url.Action("Create")" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+                    </a>
+                    <a href="@Url.Action("Statistics")" class="btn btn-outline-light">
+                        <i class="fas fa-chart-bar me-2"></i>Thống kê
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card stats-card-1 p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="flex-grow-1 text-center">
+                            <div class="stats-number">@Model.Count()</div>
+                            <div class="stats-label">Tổng sản phẩm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card stats-card-2 p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="flex-grow-1 text-center">
+                            <div class="stats-number">@Model.Count(c => c.IsAvailable)</div>
+                            <div class="stats-label">Đang bán</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card stats-card-3 p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="flex-grow-1 text-center">
+                            <div class="stats-number">@Model.Count(c => !c.IsAvailable)</div>
+                            <div class="stats-label">Ngừng bán</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="stats-card stats-card-4 p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stats-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="flex-grow-1 text-center">
+                            <div class="stats-number">@(Model.Any() ? Model.Average(c => c.Price).ToString("N0") : "0")</div>
+                            <div class="stats-label">Giá TB (₫)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <div class="row g-3">
+            <div class="col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control border-start-0" 
+                           placeholder="Tìm kiếm sản phẩm...">
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="available">Đang bán</option>
+                    <option value="unavailable">Ngừng bán</option>
+                </select>
+            </div>
+            <div class="col-lg-3">
+                <select id="priceFilter" class="form-select">
+                    <option value="">Tất cả giá</option>
+                    <option value="0-50000">0 - 50,000₫</option>
+                    <option value="50000-100000">50,000 - 100,000₫</option>
+                    <option value="100000-200000">100,000 - 200,000₫</option>
+                    <option value="200000+">Trên 200,000₫</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-eraser me-2"></i>Xóa lọc
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="products-table-card">
+        <div class="products-table-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h4 class="mb-0"><i class="fas fa-list me-2"></i>Danh sách sản phẩm</h4>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-light btn-sm active" data-view="table">
+                            <i class="fas fa-table"></i> Bảng
+                        </button>
+                        <button type="button" class="btn btn-outline-light btn-sm" data-view="grid">
+                            <i class="fas fa-th-large"></i> Lưới
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            @if (Model.Any())
+            {
+                <!-- Table View -->
+                <div id="tableView" class="table-responsive">
+                    <table class="table products-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">Hình ảnh</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Mô tả</th>
+                                <th style="width: 120px;">Giá</th>
+                                <th style="width: 120px;">Trạng thái</th>
+                                <th style="width: 120px;" class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            @foreach (var item in Model)
+                            {
+                                <tr data-name="@item.Name.ToLower()" 
+                                    data-status="@(item.IsAvailable ? "available" : "unavailable")" 
+                                    data-price="@item.Price">
+                                    <td class="text-center">
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@item.ImagePath" alt="@item.Name" class="product-image">
+                                        }
+                                        else
+                                        {
+                                            <div class="product-image-placeholder">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="product-name">@item.Name</div>
+                                        <small class="text-muted">ID: @item.Id</small>
+                                    </td>
+                                    <td>
+                                        <div class="product-description">
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                @(item.Description.Length > 60 ? item.Description.Substring(0, 60) + "..." : item.Description)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">Chưa có mô tả</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="price-badge">@item.Price.ToString("N0")₫</span>
+                                    </td>
+                                    <td>
+                                        @if (item.IsAvailable)
+                                        {
+                                            <span class="status-badge status-available">
+                                                <i class="fas fa-check me-1"></i>Đang bán
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-unavailable">
+                                                <i class="fas fa-times me-1"></i>Ngừng bán
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="action-dropdown dropdown">
+                                            <button class="action-btn" type="button" 
+                                                    aria-label="Menu hành động">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="@Url.Action("Details", new { id = item.Id })">
+                                                        <i class="fas fa-eye me-2 text-info"></i>Xem chi tiết
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="@Url.Action("Edit", new { id = item.Id })">
+                                                        <i class="fas fa-edit me-2 text-warning"></i>Chỉnh sửa
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="@Url.Action("Delete", new { id = item.Id })">
+                                                        <i class="fas fa-trash me-2"></i>Xóa
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Grid View -->
+                <div id="gridView" class="d-none">
+                    <div class="row g-4 p-4" id="productsGridBody">
+                        @foreach (var item in Model)
+                        {
+                            <div class="col-lg-3 col-md-4 col-sm-6 product-grid-item" 
+                                 data-name="@item.Name.ToLower()" 
+                                 data-status="@(item.IsAvailable ? "available" : "unavailable")" 
+                                 data-price="@item.Price">
+                                <div class="product-card">
+                                    <div class="product-card-image">
+                                        @if (!string.IsNullOrEmpty(item.ImagePath))
+                                        {
+                                            <img src="@item.ImagePath" alt="@item.Name">
+                                        }
+                                        else
+                                        {
+                                            <div class="product-card-placeholder">
+                                                <i class="fas fa-image"></i>
+                                            </div>
+                                        }
+                                        <div class="product-card-overlay">
+                                            <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-light">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                        @if (item.IsAvailable)
+                                        {
+                                            <span class="product-card-status status-available">Đang bán</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="product-card-status status-unavailable">Ngừng bán</span>
+                                        }
+                                    </div>
+                                    <div class="product-card-body">
+                                        <h6 class="product-card-title">@item.Name</h6>
+                                        <p class="product-card-description">
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                @(item.Description.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">Chưa có mô tả</span>
+                                            }
+                                        </p>
+                                        <div class="product-card-price">@item.Price.ToString("N0")₫</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <h4>Chưa có sản phẩm nào</h4>
+                    <p>Hãy thêm sản phẩm đầu tiên cho rạp chiếu phim của bạn</p>
+                    <a href="@Url.Action("Create")" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Thêm sản phẩm đầu tiên
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.Count() > 10)
+    {
+        <div class="pagination-container">
+            <nav aria-label="Phân trang sản phẩm">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <!-- Pagination will be generated by JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+<style>
+    /* Header Styles */
+    .management-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .management-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .management-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .action-buttons .btn {
+        border-radius: 15px;
+        padding: 12px 25px;
+        font-weight: 600;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+        border: 2px solid white;
+        background: transparent;
+        color: white;
+    }
+    
+    .action-buttons .btn:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .action-buttons .btn-primary {
+        background: white;
+        color: #667eea;
+        border-color: white;
+    }
+    
+    .action-buttons .btn-primary:hover {
+        background: transparent;
+        color: white;
+        border-color: white;
+    }
+
+    /* Stats Cards */
+    .stats-cards {
+        margin-bottom: 30px;
+    }
+    
+    .stats-card {
+        border: none;
+        border-radius: 20px;
+        transition: all 0.4s ease;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        color: white;
+        height: 120px;
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stats-card:hover::before {
+        opacity: 1;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .stats-card-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stats-card-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stats-card-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .stats-card-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-right: 20px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    /* Search and Filter */
+    .search-filter-section {
+        background: white;
+        border-radius: 25px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .search-filter-section .form-control,
+    .search-filter-section .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 15px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .search-filter-section .form-control:focus,
+    .search-filter-section .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .search-filter-section .input-group-text {
+        border: 2px solid #e9ecef;
+        border-right: none;
+        border-radius: 15px 0 0 15px;
+    }
+    
+    .search-filter-section .input-group .form-control {
+        border-left: none;
+        border-radius: 0 15px 15px 0;
+    }
+
+    /* Products Table */
+    .products-table-card {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .products-table-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+    }
+    
+    .products-table-header h4 {
+        margin: 0;
+        font-weight: 700;
+    }
+    
+    .products-table {
+        margin: 0;
+    }
+    
+    .products-table tbody tr {
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .products-table tbody tr:hover {
+        background: linear-gradient(90deg, #f8f9ff 0%, #e8f2ff 100%);
+        transform: translateX(5px);
+    }
+    
+    .products-table td {
+        padding: 20px 30px;
+        vertical-align: middle;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .products-table thead th {
+        padding: 20px 30px;
+        border: none;
+        background: #f8f9fa;
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Product Image */
+    .product-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        object-fit: cover;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .product-image:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .product-image-placeholder {
+        width: 60px;
+        height: 60px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 1.5rem;
+    }
+    
+    .product-name {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+    
+    .product-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    /* Price and Status Badges */
+    .price-badge {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: 0 4px 15px rgba(67, 233, 123, 0.3);
+        display: inline-block;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    
+    .status-available {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(67, 233, 123, 0.3);
+    }
+    
+    .status-unavailable {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+    }
+
+    /* Action Button */
+    .action-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 10px 15px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        padding: 10px 0;
+    }
+    
+    .dropdown-item {
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .dropdown-item:hover {
+        background: linear-gradient(90deg, #f8f9ff 0%, #e8f2ff 100%);
+        color: #667eea;
+        transform: translateX(5px);
+    }
+
+    /* Grid View */
+    .product-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .product-card-image {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+    
+    .product-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover .product-card-image img {
+        transform: scale(1.1);
+    }
+    
+    .product-card-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 3rem;
+    }
+    
+    .product-card-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover .product-card-overlay {
+        opacity: 1;
+    }
+    
+    .product-card-overlay .btn {
+        margin: 0 5px;
+    }
+    
+    .product-card-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .product-card-body {
+        padding: 20px;
+    }
+    
+    .product-card-title {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .product-card-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        line-height: 1.4;
+    }
+    
+    .product-card-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #43e97b;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 80px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 30px;
+        opacity: 0.3;
+    }
+    
+    .empty-state h4 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        margin-top: 30px;
+        padding: 20px 0;
+    }
+    
+    .pagination .page-link {
+        border: none;
+        border-radius: 10px;
+        margin: 0 5px;
+        padding: 10px 15px;
+        font-weight: 600;
+        color: #667eea;
+        background: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .pagination .page-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .management-header {
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .management-header h1 {
+            font-size: 2rem;
+        }
+        
+        .action-buttons {
+            margin-top: 20px;
+        }
+        
+        .action-buttons .btn {
+            margin: 5px;
+            width: 100%;
+        }
+        
+        .search-filter-section {
+            padding: 20px;
+        }
+        
+        .products-table td {
+            padding: 15px 10px;
+        }
+        
+        .product-name {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize filters
+        initializeFilters();
+        
+        // Initialize pagination
+        initializePagination();
+        
+        // Initialize view toggle
+        initializeViewToggle();
+    });
+
+    function initializeFilters() {
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const priceFilter = document.getElementById('priceFilter');
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+            const priceValue = priceFilter.value;
+            
+            const tableRows = document.querySelectorAll('#productsTableBody tr');
+            const gridItems = document.querySelectorAll('#productsGridBody .product-grid-item');
+            
+            // Filter table rows
+            tableRows.forEach(row => {
+                const name = row.dataset.name;
+                const status = row.dataset.status;
+                const price = parseFloat(row.dataset.price);
+                
+                let show = true;
+                
+                // Search filter
+                if (searchTerm && !name.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                // Status filter
+                if (statusValue && status !== statusValue) {
+                    show = false;
+                }
+                
+                // Price filter
+                if (priceValue && !matchesPriceRange(price, priceValue)) {
+                    show = false;
+                }
+                
+                row.style.display = show ? '' : 'none';
+            });
+            
+            // Filter grid items
+            gridItems.forEach(item => {
+                const name = item.dataset.name;
+                const status = item.dataset.status;
+                const price = parseFloat(item.dataset.price);
+                
+                let show = true;
+                
+                // Search filter
+                if (searchTerm && !name.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                // Status filter
+                if (statusValue && status !== statusValue) {
+                    show = false;
+                }
+                
+                // Price filter
+                if (priceValue && !matchesPriceRange(price, priceValue)) {
+                    show = false;
+                }
+                
+                item.style.display = show ? '' : 'none';
+            });
+        }
+
+        function matchesPriceRange(price, range) {
+            switch(range) {
+                case '0-50000':
+                    return price >= 0 && price <= 50000;
+                case '50000-100000':
+                    return price > 50000 && price <= 100000;
+                case '100000-200000':
+                    return price > 100000 && price <= 200000;
+                case '200000+':
+                    return price > 200000;
+                default:
+                    return true;
+            }
+        }
+
+        // Add event listeners
+        searchInput.addEventListener('input', applyFilters);
+        statusFilter.addEventListener('change', applyFilters);
+        priceFilter.addEventListener('change', applyFilters);
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('priceFilter').value = '';
+        
+        // Show all items
+        document.querySelectorAll('#productsTableBody tr').forEach(row => {
+            row.style.display = '';
+        });
+        
+        document.querySelectorAll('#productsGridBody .product-grid-item').forEach(item => {
+            item.style.display = '';
+        });
+    }
+
+    function initializePagination() {
+        // Simple pagination implementation
+        const itemsPerPage = 10;
+        const totalItems = document.querySelectorAll('#productsTableBody tr').length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        if (totalPages <= 1) return;
+        
+        const pagination = document.getElementById('pagination');
+        if (!pagination) return;
+        
+        // Generate pagination
+        for (let i = 1; i <= totalPages; i++) {
+            const li = document.createElement('li');
+            li.className = 'page-item' + (i === 1 ? ' active' : '');
+            li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+            pagination.appendChild(li);
+        }
+        
+        // Add event listeners
+        pagination.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('page-link')) {
+                const page = parseInt(e.target.dataset.page);
+                showPage(page);
+                
+                // Update active state
+                pagination.querySelectorAll('.page-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                e.target.parentNode.classList.add('active');
+            }
+        });
+        
+        // Show first page
+        showPage(1);
+    }
+
+    function showPage(page) {
+        const itemsPerPage = 10;
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        const tableRows = document.querySelectorAll('#productsTableBody tr');
+        const gridItems = document.querySelectorAll('#productsGridBody .product-grid-item');
+        
+        // Show/hide table rows
+        tableRows.forEach((row, index) => {
+            row.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+        
+        // Show/hide grid items
+        gridItems.forEach((item, index) => {
+            item.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+    }
+
+    function initializeViewToggle() {
+        const viewButtons = document.querySelectorAll('[data-view]');
+        const tableView = document.getElementById('tableView');
+        const gridView = document.getElementById('gridView');
+        
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const view = this.dataset.view;
+                
+                // Update active button
+                viewButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Toggle views
+                if (view === 'table') {
+                    tableView.classList.remove('d-none');
+                    gridView.classList.add('d-none');
+                } else {
+                    tableView.classList.add('d-none');
+                    gridView.classList.remove('d-none');
+                }
+            });
+        });
+    }
+</script>

@@ -1,0 +1,128 @@
+@{
+    ViewData["Title"] = "Debug Revenue Calculations";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bug"></i>
+                        Debug Revenue Calculations (Last 30 Days)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="alert alert-primary">
+                                <h6><i class="fas fa-ticket-alt"></i> Total Ticket Revenue</h6>
+                                <h4>@ViewBag.TotalTicketRevenue.ToString("N0") ₫</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-danger">
+                                <h6><i class="fas fa-popcorn"></i> Total Concession Revenue</h6>
+                                <h4>@ViewBag.TotalConcessionRevenue.ToString("N0") ₫</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-money-bill-wave"></i> Grand Total</h6>
+                                <h4>@ViewBag.GrandTotal.ToString("N0") ₫</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Breakdown -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Cart ID</th>
+                                    <th>Movie</th>
+                                    <th>Total Amount</th>
+                                    <th>Ticket Amount</th>
+                                    <th>Concession Amount</th>
+                                    <th>Created Date</th>
+                                    <th>Concession Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in ViewBag.DebugInfo)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">#@item.CartItemId</span>
+                                        </td>
+                                        <td>
+                                            <strong>@item.MovieTitle</strong>
+                                        </td>
+                                        <td>
+                                            <span class="text-success fw-bold">@item.TotalAmount.ToString("N0") ₫</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-primary fw-bold">@item.TicketAmount.ToString("N0") ₫</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-danger fw-bold">@item.ConcessionTotal.ToString("N0") ₫</span>
+                                        </td>
+                                        <td>
+                                            <small>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            @if (item.ConcessionDetails.Any())
+                                            {
+                                                <div class="small">
+                                                    @foreach (var con in item.ConcessionDetails)
+                                                    {
+                                                        <div class="mb-1">
+                                                            <strong>@con.Name</strong> x@con.Quantity<br>
+                                                            <span class="text-muted">
+                                                                Price: @con.Price.ToString("N0")₫ 
+                                                                @if (con.Discount > 0)
+                                                                {
+                                                                    <span class="text-success">(-@con.Discount.ToString("N0")₫)</span>
+                                                                }
+                                                                = @con.TotalPrice.ToString("N0")₫
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No concessions</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Formula Explanation -->
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Calculation Formula:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Ticket Revenue</strong> = CartItem.TotalAmount - Sum(ConcessionItem.TotalPrice)</li>
+                                <li><strong>Concession Revenue</strong> = Sum(ConcessionItem.TotalPrice) <em>(includes discount)</em></li>
+                                <li><strong>ConcessionItem.TotalPrice</strong> = (Price × Quantity) - Discount</li>
+                                <li><strong>Total Revenue</strong> = Ticket Revenue + Concession Revenue = CartItem.TotalAmount</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

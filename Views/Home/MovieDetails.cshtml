@@ -1,0 +1,58 @@
+@model MovieManagement.Models.Movie
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="@Model.PosterPath" class="img-fluid" alt="@Model.Title">
+        </div>
+        <div class="col-md-8">
+            <h1>@Model.Title</h1>
+            <p><strong>Đạo diễn:</strong> @Model.Director</p>
+            <p><strong>Diễn viên:</strong> @Model.Cast</p>
+            <p><strong>Ngày phát hành:</strong> @Model.ReleaseDate.ToString("dd/MM/yyyy")</p>
+            <p><strong>Thời lượng:</strong> @Model.Duration phút</p>
+            <p><strong>Ngôn ngữ:</strong> @Model.Language</p>
+            <p><strong>Đánh giá:</strong> @Model.VoteAverage/10</p>
+            <p>@Model.Overview</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <h2>Lịch chiếu</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Rạp</th>
+                            <th>Ngày chiếu</th>
+                            <th>Giờ chiếu</th>
+                            <th>Loại màn hình</th>
+                            <th>Giá vé</th>
+                            <th>Đặt vé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var showtime in ViewBag.Showtimes)
+                        {
+                            <tr>
+                                <td>@showtime.TheaterId</td>
+                                <td>@showtime.ShowDateTime.ToString("dd/MM/yyyy")</td>
+                                <td>@showtime.ShowDateTime.ToString("HH:mm")</td>
+                                <td>@showtime.ScreenType</td>
+                                <td>@showtime.Price.ToString("N0") VNĐ</td>
+                                <td>
+                                    <a href="@Url.Action("Book", "Booking", new { showtimeId = showtime.Id })" class="btn btn-primary">Đặt vé</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,588 @@
+﻿@model List<Movie>
+@{
+    ViewData["Title"] = "Phim";
+    var currentDate = DateTime.Now;
+    
+    // First, get now showing movies (released and marked as now showing)
+    var nowShowingMovies = Model.Where(m => 
+        m.IsNowShowing && 
+        m.ReleaseDate <= currentDate && 
+        !m.IsComingSoon
+    ).ToList();
+    
+    // Then, get coming soon movies (not released or marked as coming soon, excluding now showing movies)
+    var comingSoonMovies = Model.Where(m => 
+        (m.IsComingSoon || m.ReleaseDate > currentDate) && 
+        !m.IsNowShowing
+    ).ToList();
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="section-title">Phim</h1>
+        <div class="filter-search-container">
+            <div class="genre-filter-wrapper">
+                <select id="genreFilter" class="form-select genre-filter">
+                    <option value="">Tất cả thể loại</option>
+                    @if (ViewBag.Genres != null)
+                    {
+                        @foreach (var genre in (List<MovieManagement.Models.Genre>)ViewBag.Genres)
+                        {
+                            var isSelected = ViewBag.SelectedGenreId != null && ViewBag.SelectedGenreId.ToString() == genre.Id.ToString();
+                            <option value="@genre.Id" selected="@isSelected">
+                                @genre.Name
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm phim...">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills movie-tabs mb-4" id="movieTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="now-showing-tab" data-bs-toggle="tab" data-bs-target="#now-showing" type="button" role="tab" aria-controls="now-showing" aria-selected="true">
+                <i class="bi bi-play-circle me-2"></i>Đang Chiếu (@nowShowingMovies.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="coming-soon-tab" data-bs-toggle="tab" data-bs-target="#coming-soon" type="button" role="tab" aria-controls="coming-soon" aria-selected="false">
+                <i class="bi bi-clock me-2"></i>Sắp Chiếu (@comingSoonMovies.Count)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="movieTabsContent">
+        <div class="tab-pane fade show active" id="now-showing" role="tabpanel" aria-labelledby="now-showing-tab">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @if (nowShowingMovies.Any())
+                {
+                    @foreach (var movie in nowShowingMovies)
+                    {
+                        <div class="col movie-item">
+                            <div class="movie-card">
+                                <div class="movie-poster-container">
+                                    @if (string.IsNullOrEmpty(movie.PosterPath) || movie.PosterPath.StartsWith("/images/placeholder"))
+                                    {
+                                        <div class="movie-poster-placeholder">
+                                            <span>@movie.Title</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <img src="@(movie.PosterPath.StartsWith("http") ? movie.PosterPath :
+                                                 movie.PosterPath.StartsWith("/") ? movie.PosterPath :
+                                                 $"https://image.tmdb.org/t/p/w500/{movie.PosterPath}")"
+                                             alt="@movie.Title" 
+                                             class="movie-poster"
+                                             onerror="this.src='/images/default-movie-poster.jpg'">
+                                    }
+                                    <div class="movie-overlay">
+                                        <div class="movie-rating">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <span>@movie.VoteAverage.ToString("0.0")</span>
+                                        </div>
+                                        <div class="movie-genres">
+                                            @try
+                                            {
+                                                var genres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(movie.GenreNames ?? "[]");
+                                                foreach (var genre in genres)
+                                                {
+                                                    <span class="genre-badge">@genre</span>
+                                                }
+                                            }
+                                            catch
+                                            {
+                                                <span class="genre-badge">Phim</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="movie-info">
+                                    <h5 class="movie-title">@movie.Title</h5>
+                                    <div class="movie-meta">
+                                        <span class="movie-date"><i class="bi bi-calendar-event"></i> @movie.ReleaseDate.ToString("dd/MM/yyyy")</span>
+                                        <span class="movie-language"><i class="bi bi-translate"></i> @(string.IsNullOrEmpty(movie.Language) ? "N/A" : movie.Language)</span>
+                                    </div>
+                                    <div class="movie-actions">
+                                        <a href="@Url.Action("Index", "Booking", new { movieId = movie.Id })" class="btn btn-primary btn-buy-ticket">
+                                            <i class="bi bi-ticket-perforated"></i> Mua Vé
+                                        </a>
+                                        <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" class="btn btn-outline-secondary btn-details">
+                                            <i class="bi bi-info-circle"></i> Chi Tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <h3 class="text-muted">Không có phim đang chiếu</h3>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="tab-pane fade" id="coming-soon" role="tabpanel" aria-labelledby="coming-soon-tab">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @if (comingSoonMovies.Any())
+                {
+                    @foreach (var movie in comingSoonMovies)
+                    {
+                        <div class="col movie-item">
+                            <div class="movie-card coming-soon">
+                                <div class="movie-poster-container">
+                                    @if (string.IsNullOrEmpty(movie.PosterPath) || movie.PosterPath.StartsWith("/images/placeholder"))
+                                    {
+                                        <div class="movie-poster-placeholder">
+                                            <span>@movie.Title</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <img src="@(movie.PosterPath.StartsWith("http") ? movie.PosterPath :
+                                                 movie.PosterPath.StartsWith("/") ? movie.PosterPath :
+                                                 $"https://image.tmdb.org/t/p/w500/{movie.PosterPath}")"
+                                             alt="@movie.Title" 
+                                             class="movie-poster"
+                                             onerror="this.src='/images/default-movie-poster.jpg'">
+                                    }
+                                    <div class="movie-overlay">
+                                        <div class="movie-rating">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <span>@movie.VoteAverage.ToString("0.0")</span>
+                                        </div>
+                                        <div class="movie-genres">
+                                            @try
+                                            {
+                                                var genres = System.Text.Json.JsonSerializer.Deserialize<List<string>>(movie.GenreNames ?? "[]");
+                                                foreach (var genre in genres)
+                                                {
+                                                    <span class="genre-badge">@genre</span>
+                                                }
+                                            }
+                                            catch
+                                            {
+                                                <span class="genre-badge">Phim</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="coming-soon-badge">
+                                        <i class="bi bi-clock"></i> Sắp Chiếu
+                                    </div>
+                                </div>
+                                <div class="movie-info">
+                                    <h5 class="movie-title">@movie.Title</h5>
+                                    <div class="movie-meta">
+                                        <span class="movie-date"><i class="bi bi-calendar-event"></i> @movie.ReleaseDate.ToString("dd/MM/yyyy")</span>
+                                        <span class="movie-language"><i class="bi bi-translate"></i> @(string.IsNullOrEmpty(movie.Language) ? "N/A" : movie.Language)</span>
+                                    </div>
+                                    <div class="movie-actions">
+                                        <a href="@Url.Action("Details", "Movie", new { id = movie.Id })" class="btn btn-outline-primary btn-details">
+                                            <i class="bi bi-info-circle"></i> Chi Tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <h3 class="text-muted">Không có phim sắp chiếu</h3>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .section-title {
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0;
+    }
+    
+    .movie-tabs {
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .movie-tabs .nav-link {
+        color: #666;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+        transition: all 0.3s ease;
+    }
+    
+    .movie-tabs .nav-link:hover {
+        color: #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    .movie-tabs .nav-link.active {
+        color: #007bff;
+        background-color: rgba(0, 123, 255, 0.1);
+        border-bottom: 2px solid #007bff;
+    }
+    
+    .movie-card {
+        background: #fff;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .movie-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .movie-poster-container {
+        position: relative;
+        overflow: hidden;
+        padding-top: 150%; /* 2:3 aspect ratio */
+    }
+    
+    .movie-poster {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .movie-card:hover .movie-poster {
+        transform: scale(1.05);
+    }
+    
+    .movie-poster-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 1rem;
+    }
+    
+    .movie-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+        padding: 1rem;
+        color: white;
+    }
+    
+    .movie-rating {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .movie-rating i {
+        margin-right: 0.25rem;
+    }
+    
+    .movie-genres {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    .genre-badge {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+    }
+    
+    .coming-soon-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 193, 7, 0.9);
+        color: #000;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .movie-info {
+        padding: 1rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .movie-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        line-height: 1.4;
+        height: 3rem;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    .movie-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+    
+    .movie-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-buy-ticket, .btn-details {
+        flex: 1;
+        text-align: center;
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .search-container {
+        position: relative;
+    }
+    
+    .filter-search-container {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .genre-filter-wrapper {
+        position: relative;
+    }
+    
+    .genre-filter {
+        min-width: 200px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 2rem;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        font-size: 0.875rem;
+    }
+    
+    .genre-filter:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        background-color: #fff;
+    }
+    
+    .genre-filter.active-filter {
+        border-color: #007bff;
+        background-color: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+        font-weight: 500;
+    }
+    
+    .section-title .text-primary {
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    
+    .search-wrapper {
+        position: relative;
+        width: 300px;
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #ddd;
+        border-radius: 2rem;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        background-color: #fff;
+    }
+    
+    /* Responsive styles */
+    @@media (max-width: 768px) {
+        .search-wrapper {
+            width: 100%;
+        }
+        
+        .genre-filter {
+            min-width: 150px;
+            width: 100%;
+        }
+        
+        .filter-search-container {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem;
+        }
+        
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Store original movie data for filtering
+            let allMovies = $('.movie-item');
+            
+            // Initialize movie counts on page load
+            updateMovieCounts();
+            
+            // Genre filter functionality
+            $('#genreFilter').on('change', function() {
+                const selectedGenreId = $(this).val();
+                
+                if (selectedGenreId === '') {
+                    // Show all movies if no genre selected
+                    window.location.href = '@Url.Action("Index", "Movie")';
+                } else {
+                    // Redirect with genre filter
+                    window.location.href = '@Url.Action("Index", "Movie")?genreId=' + selectedGenreId;
+                }
+            });
+            
+            // Search functionality
+            let searchTimeout;
+            $('#searchInput').on('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = $(this).val().trim().toLowerCase();
+                
+                searchTimeout = setTimeout(function() {
+                    $('.movie-item').each(function() {
+                        const movieTitle = $(this).find('.movie-title').text().toLowerCase();
+                        const movieGenres = $(this).find('.genre-badge').map(function() {
+                            return $(this).text().toLowerCase();
+                        }).get().join(' ');
+                        
+                        if (movieTitle.includes(searchTerm) || movieGenres.includes(searchTerm)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                    
+                    // Update movie counts in tabs
+                    updateMovieCounts();
+                }, 300);
+            });
+            
+            // Tab switching with smooth transition
+            $('.nav-link').on('click', function() {
+                $('.tab-pane').removeClass('show active');
+                $($(this).attr('data-bs-target')).addClass('show active');
+                
+                // No need to update counts when switching tabs since we show total counts
+            });
+            
+            // Function to update movie counts in tabs
+            function updateMovieCounts() {
+                // Get total count of movies in each tab (not just visible ones)
+                const nowShowingTotal = $('#now-showing .movie-item').length;
+                const comingSoonTotal = $('#coming-soon .movie-item').length;
+                
+                // For search functionality, show visible count only when searching
+                const searchTerm = $('#searchInput').val().trim();
+                if (searchTerm !== '') {
+                    const nowShowingVisible = $('#now-showing .movie-item:visible').length;
+                    const comingSoonVisible = $('#coming-soon .movie-item:visible').length;
+                    
+                    $('#now-showing-tab').html('<i class="bi bi-play-circle me-2"></i>Đang Chiếu (' + nowShowingVisible + '/' + nowShowingTotal + ')');
+                    $('#coming-soon-tab').html('<i class="bi bi-clock me-2"></i>Sắp Chiếu (' + comingSoonVisible + '/' + comingSoonTotal + ')');
+                } else {
+                    // Show total counts when not searching
+                    $('#now-showing-tab').html('<i class="bi bi-play-circle me-2"></i>Đang Chiếu (' + nowShowingTotal + ')');
+                    $('#coming-soon-tab').html('<i class="bi bi-clock me-2"></i>Sắp Chiếu (' + comingSoonTotal + ')');
+                }
+            }
+            
+            // Show selected genre in filter
+            const urlParams = new URLSearchParams(window.location.search);
+            const genreId = urlParams.get('genreId');
+            if (genreId) {
+                $('#genreFilter').val(genreId);
+                
+                // Add active indicator to show filtering is active
+                $('.genre-filter').addClass('active-filter');
+                
+                // Show selected genre name in page title
+                const selectedGenreName = $('#genreFilter option:selected').text();
+                if (selectedGenreName !== 'Tất cả thể loại') {
+                    $('.section-title').html('Phim - <span class="text-primary">' + selectedGenreName + '</span>');
+                }
+            }
+            
+            // Clear search when changing genre filter
+            $('#genreFilter').on('change', function() {
+                $('#searchInput').val('');
+            });
+            
+            // Initialize counts and update display
+            updateMovieCounts();
+            
+            // Add clear filter button if genre is selected
+            if (genreId) {
+                const clearButton = $('<button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="clearFilter">' +
+                    '<i class="bi bi-x-circle me-1"></i>Xóa bộ lọc</button>');
+                $('.genre-filter-wrapper').append(clearButton);
+                
+                $('#clearFilter').on('click', function() {
+                    window.location.href = '@Url.Action("Index", "Movie")';
+                });
+            }
+        });
+    </script>
+}
+

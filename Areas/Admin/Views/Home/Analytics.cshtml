@@ -1,0 +1,384 @@
+@{
+    ViewData["Title"] = "Analytics Dashboard";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        Analytics Dashboard
+                    </h2>
+                    <p class="text-muted mb-0">Phân tích chi tiết doanh thu và hiệu suất kinh doanh</p>
+                </div>
+                <div>
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Về Dashboard
+                    </a>
+                    <button class="btn btn-primary" onclick="exportAllCharts()">
+                        <i class="fas fa-download"></i> Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                    <h4 class="mb-0">@((ViewBag.DashboardStats?.TotalRevenue ?? 0).ToString("N0")) ₫</h4>
+                    <small>Tổng doanh thu</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-ticket-alt fa-2x mb-2"></i>
+                    <h4 class="mb-0">@((ViewBag.DashboardStats?.TicketRevenue ?? 0).ToString("N0")) ₫</h4>
+                    <small>Doanh thu vé</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-popcorn fa-2x mb-2"></i>
+                    <h4 class="mb-0">@((ViewBag.DashboardStats?.ConcessionRevenue ?? 0).ToString("N0")) ₫</h4>
+                    <small>Doanh thu bắp nước</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-percentage fa-2x mb-2"></i>
+                    <h4 class="mb-0">@((ViewBag.DashboardStats?.AttachRate ?? 0).ToString("F1"))%</h4>
+                    <small>Tỷ lệ mua kèm</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h4 class="mb-0">@(ViewBag.DashboardStats?.TotalTicketsSold ?? 0)</h4>
+                    <small>Vé đã bán</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm bg-gradient-secondary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <h4 class="mb-0">@(ViewBag.DashboardStats?.TotalConcessionsSold ?? 0)</h4>
+                    <small>Sản phẩm bán</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Extended Revenue Chart (30 days) -->
+        <div class="col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area"></i>
+                        Doanh thu 30 ngày (Chi tiết)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="extendedRevenueChart" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Movies (Extended) -->
+        <div class="col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy"></i>
+                        Top 10 Phim Bán Chạy
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="extendedMovieChart" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Hourly Sales Pattern -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock"></i>
+                        Mẫu bán hàng theo giờ (7 ngày)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="hourlySalesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Comparison -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i>
+                        So sánh tháng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyComparisonChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Analytics Row -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users-cog"></i>
+                        Phân tích khách hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Khách hàng mới (30 ngày)</h6>
+                        <h3 class="text-primary">@((ViewBag.CustomerAnalytics?.NewCustomers ?? 0))</h3>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Khách hàng quay lại</h6>
+                        <h3 class="text-success">@((ViewBag.CustomerAnalytics?.RepeatCustomers ?? 0))</h3>
+                    </div>
+                    <div>
+                        <h6>Giá trị đơn hàng TB</h6>
+                        <h3 class="text-warning">@(((decimal)(ViewBag.CustomerAnalytics?.AvgOrderValue ?? 0)).ToString("N0")) ₫</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i>
+                        Trạng thái đặt vé (Chi tiết)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="detailedBookingStatusChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data from controller
+        var revenueLabels = @Html.Raw(Json.Serialize(ViewBag.RevenueLabels ?? new List<string>()));
+        var revenueData = @Html.Raw(Json.Serialize(ViewBag.RevenueData ?? new List<decimal>()));
+        var ticketRevenueData = @Html.Raw(Json.Serialize(ViewBag.TicketRevenueData ?? new List<decimal>()));
+        var concessionRevenueData = @Html.Raw(Json.Serialize(ViewBag.ConcessionRevenueData ?? new List<decimal>()));
+        var movieLabels = @Html.Raw(Json.Serialize(ViewBag.PopularMovieLabels ?? new List<string>()));
+        var movieData = @Html.Raw(Json.Serialize(ViewBag.PopularMovieData ?? new List<int>()));
+        var bookingStatusData = @Html.Raw(Json.Serialize(ViewBag.BookingStatusData ?? new int[] {0, 0, 0}));
+        var hourlySalesData = @Html.Raw(Json.Serialize(ViewBag.HourlySalesData ?? new List<object>()));
+        var monthlyComparisonData = @Html.Raw(Json.Serialize(ViewBag.MonthlyComparisonData ?? new List<object>()));
+
+        // Extended Revenue Chart (30 days)
+        new Chart(document.getElementById('extendedRevenueChart'), {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: [
+                    {
+                        label: 'Tổng doanh thu',
+                        data: revenueData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3
+                    },
+                    {
+                        label: 'Doanh thu vé',
+                        data: ticketRevenueData,
+                        borderColor: '#007bff',
+                        tension: 0.4,
+                        fill: false,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Doanh thu bắp nước',
+                        data: concessionRevenueData,
+                        borderColor: '#dc3545',
+                        tension: 0.4,
+                        fill: false,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + 
+                                       context.parsed.y.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Extended Movie Chart (Top 10)
+        new Chart(document.getElementById('extendedMovieChart'), {
+            type: 'horizontalBar',
+            data: {
+                labels: movieLabels,
+                datasets: [{
+                    data: movieData,
+                    backgroundColor: [
+                        '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d',
+                        '#20c997', '#fd7e14', '#6f42c1', '#d63384', '#6c757d'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Hourly Sales Chart
+        if (hourlySalesData.length > 0) {
+            new Chart(document.getElementById('hourlySalesChart'), {
+                type: 'bar',
+                data: {
+                    labels: hourlySalesData.map(h => h.Hour + ':00'),
+                    datasets: [{
+                        label: 'Số vé bán',
+                        data: hourlySalesData.map(h => h.Count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Monthly Comparison Chart
+        if (monthlyComparisonData.length > 0) {
+            new Chart(document.getElementById('monthlyComparisonChart'), {
+                type: 'bar',
+                data: {
+                    labels: monthlyComparisonData.map(m => `Tháng ${m.Month}`),
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: monthlyComparisonData.map(m => m.Revenue),
+                        backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN') + ' ₫';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Detailed Booking Status Chart
+        new Chart(document.getElementById('detailedBookingStatusChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Đã thanh toán', 'Chờ thanh toán', 'Đã hủy'],
+                datasets: [{
+                    data: bookingStatusData,
+                    backgroundColor: ['#198754', '#ffc107', '#dc3545']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Export functionality
+        function exportAllCharts() {
+            // Implementation for exporting all charts as PDF or images
+            alert('Chức năng xuất báo cáo sẽ được triển khai trong phiên bản tiếp theo');
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .bg-gradient-primary { background: linear-gradient(45deg, #007bff, #0056b3); }
+        .bg-gradient-success { background: linear-gradient(45deg, #28a745, #1e7e34); }
+        .bg-gradient-danger { background: linear-gradient(45deg, #dc3545, #c82333); }
+        .bg-gradient-info { background: linear-gradient(45deg, #17a2b8, #138496); }
+        .bg-gradient-warning { background: linear-gradient(45deg, #ffc107, #e0a800); }
+        .bg-gradient-secondary { background: linear-gradient(45deg, #6c757d, #545b62); }
+        
+        .card {
+            transition: transform 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+}

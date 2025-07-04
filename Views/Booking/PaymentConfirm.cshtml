@@ -1,0 +1,464 @@
+@model PaymentViewModel
+@using Microsoft.AspNetCore.Identity
+
+@{
+    ViewData["Title"] = "Xác nhận thanh toán";
+    var isAdmin = User.IsInRole("Admin");
+    var isStaff = User.IsInRole("Staff");
+    var canUseCash = isAdmin || isStaff;
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">Xác nhận thanh toán</h2>                    <div class="booking-details mb-4">
+                        @{
+                            bool isConcessionOnly = Model.CartItem.ShowtimeId == null;
+                        }
+                        
+                        @if (!isConcessionOnly)
+                        {
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img src="@Model.CartItem.Showtime.Movie.PosterPath" 
+                                         alt="@Model.CartItem.Showtime.Movie.Title" 
+                                         class="img-fluid rounded">
+                                </div>
+                                <div class="col-md-8">
+                                    <h3 class="h4 mb-3">@Model.CartItem.Showtime.Movie.Title</h3>
+                                    <div class="booking-info">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="far fa-calendar-alt text-primary me-2"></i>
+                                            <span>@Model.CartItem.Showtime.ShowDateTime.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-couch text-primary me-2"></i>
+                                            <span>Ghế: @Model.CartItem.SeatNames</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                                            <span>Tổng tiền: @Model.CartItem.TotalAmount.ToString("N0") VNĐ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Concession-only payment -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-utensils fa-3x text-muted"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <h3 class="h4 mb-3"><i class="fas fa-utensils me-2"></i>Đồ ăn & Nước uống</h3>                                    <div class="booking-info">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-shopping-bag text-primary me-2"></i>
+                                            <span>@Model.CartItem.SeatNames</span>
+                                        </div>
+                                        @if (Model.CartItem.ConcessionItems != null && Model.CartItem.ConcessionItems.Any())
+                                        {
+                                            <div class="mb-2">
+                                                <strong>Chi tiết sản phẩm:</strong>
+                                                @foreach (var concessionItem in Model.CartItem.ConcessionItems)
+                                                {
+                                                    <div class="ms-3 small text-muted">
+                                                        • @concessionItem.Concession.Name x@concessionItem.Quantity - @concessionItem.TotalPrice.ToString("N0") VNĐ
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
+                                            <span>Tổng tiền: @Model.CartItem.TotalAmount.ToString("N0") VNĐ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="payment-methods mb-4">
+                        <h4 class="h5 mb-3">Chọn phương thức thanh toán</h4>
+                        <form asp-controller="Booking" asp-action="ProcessPayment" method="post" id="paymentForm">
+                            <input type="hidden" name="cartItemId" value="@Model.CartItem.Id" />
+                            
+                            <div class="row g-3">
+                                @foreach (var method in Model.PaymentMethods)
+                                {
+                                    if (method.Id == "cash" && !canUseCash)
+                                    {
+                                        continue;
+                                    }
+                                    <div class="col-md-6">
+                                        <div class="card h-100 payment-method-card" data-payment-id="@method.Id">
+                                            <div class="card-body">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="paymentMethod" value="@method.Id" 
+                                                           id="payment-@method.Id" required>
+                                                    <label class="form-check-label w-100" for="payment-@method.Id">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="fw-bold">
+                                                                @method.Name
+                                                                @if (method.Id == "cash" && isStaff)
+                                                                {
+                                                                    <span class="badge bg-success ms-2">Staff</span>
+                                                                }
+                                                            </span>
+                                                            @switch (method.Id)
+                                                            {
+                                                                case "cash":
+                                                                    <i class="fas fa-money-bill-wave text-success"></i>
+                                                                    break;
+                                                                case "momo":
+                                                                    <i class="fas fa-wallet text-danger"></i>
+                                                                    break;
+                                                                case "vnpay":
+                                                                    <i class="fas fa-qrcode text-primary"></i>
+                                                                    break;
+                                                                case "card":
+                                                                    <i class="fas fa-credit-card text-info"></i>
+                                                                    break;
+                                                            }
+                                                        </div>
+                                                        <small class="text-muted d-block mt-1">
+                                                            @if (method.Id == "cash" && isStaff)
+                                                            {
+                                                                @("Nhân viên có thể nhận thanh toán tại quầy")
+                                                            }
+                                                            else
+                                                            {
+                                                                @method.Description
+                                                            }
+                                                        </small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Payment Method Specific Forms -->
+                            <div id="paymentForms" class="mt-4">
+                                <!-- Cash Payment Form -->
+                                <div class="payment-form" id="cashForm" style="display: none;">
+                                    @if (isStaff)
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>Thanh toán tại quầy</strong><br>
+                                            Bạn là nhân viên, có thể nhận thanh toán trực tiếp từ khách hàng tại quầy.
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Số tiền nhận từ khách hàng</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">VNĐ</span>
+                                                <input type="number" class="form-control" name="receivedAmount" 
+                                                       id="receivedAmount" min="@Model.CartItem.TotalAmount" 
+                                                       placeholder="@Model.CartItem.TotalAmount.ToString("N0")"
+                                                       value="@Model.CartItem.TotalAmount">
+                                            </div>
+                                            <div class="form-text">
+                                                Tổng tiền cần thanh toán: <strong>@Model.CartItem.TotalAmount.ToString("N0") VNĐ</strong>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Tiền thừa trả lại</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">VNĐ</span>
+                                                <input type="text" class="form-control" id="changeAmount" readonly value="0">
+                                            </div>
+                                        </div>
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            <small>Vui lòng kiểm tra kỹ số tiền trước khi xác nhận thanh toán.</small>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-success">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Vui lòng đến quầy thanh toán để hoàn tất giao dịch.
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Momo Payment Form -->
+                                <div class="payment-form" id="momoForm" style="display: none;">
+                                    <div class="text-center mb-4">
+                                        <img src="@Url.Action("PaymentQr", "Booking", new { method = "momo", cartItemId = Model.CartItem.Id })" alt="Momo QR Code" class="img-fluid mb-3" style="max-width: 200px;" />
+                                        <p class="text-muted">Quét mã QR bằng ứng dụng Momo để thanh toán</p>
+                                    </div>
+                                </div>
+
+                                <!-- VNPay Payment Form -->
+                                <div class="payment-form" id="vnpayForm" style="display: none;">
+                                    <div class="text-center mb-4">
+                                        <img src="@Url.Action("PaymentQr", "Booking", new { method = "vnpay", cartItemId = Model.CartItem.Id })" alt="VNPay QR Code" class="img-fluid mb-3" style="max-width: 200px;" />
+                                        <p class="text-muted">Quét mã QR bằng ứng dụng ngân hàng để thanh toán</p>
+                                    </div>
+                                </div>
+
+                                <!-- Card Payment Form -->
+                                <div class="payment-form" id="cardForm" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">Số thẻ</label>
+                                        <input type="text" class="form-control" name="cardNumber" placeholder="1234 5678 9012 3456">
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Ngày hết hạn</label>
+                                            <input type="text" class="form-control" name="expiryDate" placeholder="MM/YY">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">CVV</label>
+                                            <input type="text" class="form-control" name="cvv" placeholder="123">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Tên chủ thẻ</label>
+                                        <input type="text" class="form-control" name="cardHolder" placeholder="NGUYEN VAN A">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-3">
+                                <button type="submit" class="btn btn-primary btn-lg flex-grow-1" id="submitPayment" disabled>
+                                    <i class="fas fa-lock me-2"></i>Thanh toán
+                                </button>
+                                <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                                    <i class="fas fa-times me-2"></i>Hủy
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Bằng việc tiếp tục, bạn đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">điều khoản và điều kiện</a> của chúng tôi.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Điều khoản và điều kiện</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Quy định về đặt vé</h6>
+                <p>- Vé đã đặt không thể hoàn trả hoặc đổi sang suất chiếu khác.</p>
+                <p>- Vui lòng thanh toán trong vòng 15 phút sau khi đặt vé.</p>
+                <p>- Vé sẽ tự động hủy nếu không thanh toán đúng hạn.</p>
+
+                <h6>2. Quy định về thanh toán</h6>
+                <p>- Đảm bảo thông tin thanh toán chính xác trước khi xác nhận.</p>
+                <p>- Mọi giao dịch đều được mã hóa và bảo mật.</p>
+                <p>- Hóa đơn điện tử sẽ được gửi qua email sau khi thanh toán thành công.</p>
+
+                <h6>3. Quy định về nhận vé</h6>
+                <p>- Vui lòng đến trước giờ chiếu 15-30 phút để nhận vé.</p>
+                <p>- Cần xuất trình mã đặt vé và CCCD/CMND khi nhận vé.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .payment-methods .card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .payment-methods .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+        }
+
+        .payment-methods .card.selected {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+
+        .payment-methods .form-check {
+            margin: 0;
+            padding: 0;
+        }
+
+        .payment-methods .form-check-input {
+            display: none;
+        }
+
+        .payment-methods .form-check-label {
+            cursor: pointer;
+            padding: 0.5rem;
+            margin: 0;
+            width: 100%;
+        }
+
+        .payment-form {
+            background-color: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .payment-method-card .badge {
+            font-size: 0.7em;
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        #receivedAmount {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        #changeAmount {
+            background-color: #e9ecef;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle payment method selection
+            $('.payment-method-card').click(function() {
+                // Remove selected class from all cards
+                $('.payment-method-card').removeClass('selected');
+                // Add selected class to clicked card
+                $(this).addClass('selected');
+                
+                // Check the radio input
+                const radio = $(this).find('input[type="radio"]');
+                radio.prop('checked', true);
+                
+                // Hide all payment forms
+                $('.payment-form').hide();
+                
+                // Show the selected payment form
+                const paymentId = $(this).data('payment-id');
+                $(`#${paymentId}Form`).show();
+                
+                // Enable submit button
+                $('#submitPayment').prop('disabled', false);
+            });
+
+            // Calculate change for cash payment (Staff only)
+            $('#receivedAmount').on('input', function() {
+                const totalAmount = @Model.CartItem.TotalAmount;
+                const receivedAmount = parseFloat($(this).val()) || 0;
+                const changeAmount = receivedAmount - totalAmount;
+                
+                $('#changeAmount').val(changeAmount >= 0 ? changeAmount.toLocaleString('vi-VN') : '0');
+                
+                // Update submit button state
+                const submitBtn = $('#submitPayment');
+                if (receivedAmount >= totalAmount) {
+                    submitBtn.prop('disabled', false);
+                    submitBtn.removeClass('btn-secondary').addClass('btn-primary');
+                } else {
+                    submitBtn.prop('disabled', true);
+                    submitBtn.removeClass('btn-primary').addClass('btn-secondary');
+                }
+            });
+
+            // Form submission
+            $('#paymentForm').on('submit', function(e) {
+                const selectedPayment = $('input[name="paymentMethod"]:checked').val();
+                if (!selectedPayment) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn phương thức thanh toán');
+                    return false;
+                }
+
+                // Validate cash payment for staff
+                if (selectedPayment === 'cash' && $('#receivedAmount').length > 0) {
+                    const totalAmount = @Model.CartItem.TotalAmount;
+                    const receivedAmount = parseFloat($('#receivedAmount').val()) || 0;
+                    
+                    if (receivedAmount < totalAmount) {
+                        e.preventDefault();
+                        alert('Số tiền nhận không đủ để thanh toán');
+                        return false;
+                    }
+                    
+                    const changeAmount = receivedAmount - totalAmount;
+                    if (changeAmount > 0) {
+                        if (!confirm(`Tiền thừa trả lại khách hàng: ${changeAmount.toLocaleString('vi-VN')} VNĐ\n\nBạn có chắc chắn muốn tiếp tục?`)) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    }
+                }
+
+                // Validate card payment form if selected
+                if (selectedPayment === 'card') {
+                    const cardNumber = $('input[name="cardNumber"]').val();
+                    const expiryDate = $('input[name="expiryDate"]').val();
+                    const cvv = $('input[name="cvv"]').val();
+                    const cardHolder = $('input[name="cardHolder"]').val();
+
+                    if (!cardNumber || !expiryDate || !cvv || !cardHolder) {
+                        e.preventDefault();
+                        alert('Vui lòng điền đầy đủ thông tin thẻ');
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Format received amount input
+            $('#receivedAmount').on('input', function() {
+                let value = $(this).val().replace(/[^0-9]/g, '');
+                $(this).val(value);
+            });
+
+            // Format card number input
+            $('input[name="cardNumber"]').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                value = value.replace(/(\d{4})/g, '$1 ').trim();
+                $(this).val(value);
+            });
+
+            // Format expiry date input
+            $('input[name="expiryDate"]').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.slice(0,2) + '/' + value.slice(2);
+                }
+                $(this).val(value);
+            });
+
+            // Format CVV input
+            $('input[name="cvv"]').on('input', function() {
+                $(this).val($(this).val().replace(/\D/g, '').slice(0,3));
+            });
+        });
+    </script>
+} 

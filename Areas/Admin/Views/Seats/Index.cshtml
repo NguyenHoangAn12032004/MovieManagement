@@ -1,0 +1,445 @@
+@model MovieManagement.Areas.Admin.Models.AdminSeatViewModel
+
+@{
+    ViewData["Title"] = "Quản lý ghế ngồi";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@Html.AntiForgeryToken()
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-chair me-2"></i>Quản lý ghế ngồi</h5>
+        <div class="d-flex gap-2">
+            <select id="theaterSelector" class="form-select">
+                <option value="">-- Chọn phòng --</option>
+                @foreach (var theater in Model.Theaters)
+                {
+                    <option value="@theater.Id">@theater.Name</option>
+                }
+            </select>
+            <select id="showtimeSelector" class="form-select" disabled>
+                <option value="">-- Chọn lịch chiếu --</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <form asp-action="SeedSeatsForAllShowtimes" method="post" class="d-inline">
+                <button type="submit" class="btn btn-warning fw-bold me-2">
+                    <i class="bi bi-plus-circle me-1"></i> Tạo ghế cho tất cả lịch chiếu chưa có ghế
+                </button>
+            </form>
+            <form asp-action="ResetAllSeats" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger fw-bold" onclick="return confirm('Bạn có chắc chắn muốn reset tất cả ghế? Hành động này sẽ xóa tất cả ghế hiện có và tạo lại từ đầu.')">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Reset tất cả ghế
+                </button>
+            </form>
+        </div>
+        <div class="theater-layout mb-4">
+            <div class="screen-area text-center bg-light py-3 mb-5">
+                <h5 class="text-primary mb-0">MÀN HÌNH</h5>
+            </div>
+            
+            <div id="seatingPlan" class="seating-plan">
+                <!-- Sơ đồ ghế sẽ được render bởi JavaScript -->
+            </div>
+            
+            <div class="seat-legend d-flex justify-content-center mt-4">
+                <div class="legend-item mx-3">
+                    <span class="seat-box bg-primary"></span>
+                    <span>Ghế thường</span>
+                </div>
+                <div class="legend-item mx-3">
+                    <span class="seat-box bg-purple"></span>
+                    <span>Ghế VIP</span>
+                </div>
+                <div class="legend-item mx-3">
+                    <span class="seat-box bg-orange"></span>
+                    <span>Ghế đôi</span>
+                </div>
+              
+                <div class="legend-item mx-3">
+                    <span class="seat-box bg-danger"></span>
+                    <span>Ghế hư hỏng</span>
+                </div>
+                <div class="legend-item mx-3">
+                    <span class="seat-box bg-dark"></span>
+                    <span>Ghế đang vệ sinh</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal cập nhật trạng thái ghế -->
+<div class="modal fade" id="updateSeatModal" tabindex="-1" aria-labelledby="updateSeatModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateSeatModalLabel">Cập nhật trạng thái ghế</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="seatId" />
+                <div class="mb-3">
+                    <label class="form-label">Ghế: <span id="seatLabel"></span></label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Trạng thái:</label>
+                    <select id="seatStatus" class="form-select">
+                        <option value="Available">Có sẵn</option>
+                        <option value="Maintenance">Hư hỏng</option>
+                        <option value="Cleaning">Đang vệ sinh</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="updateSeatBtn">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .seating-plan {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .seat-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .row-label {
+            width: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .seat {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .seat:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+        
+        .seat-box {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .bg-purple {
+            background-color: #9966CC;
+        }
+        
+        .bg-orange {
+            background-color: #FFA500;
+        }
+        
+        .screen-area {
+            width: 80%;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        
+        /* Thêm CSS cho dấu gạch chéo trên ghế đã đặt */
+        .cross-line {
+            position: absolute;
+            width: 120%;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.7);
+            top: 50%;
+            left: -10%;
+            transform: translateY(-50%);
+        }
+        .cross-line.rotate {
+            transform: translateY(-50%) rotate(90deg);
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Danh sách ghế mẫu (dummy data)
+            const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            const seatsPerRow = 12;
+            
+            // Lấy danh sách ghế từ model (với cấu trúc đơn giản hơn để tránh lỗi circular reference)
+            const modelSeats = @Html.Raw(Json.Serialize(Model.Seats.Select(s => new 
+            { 
+                id = s.Id, 
+                status = s.Status,
+                row = s.Row,
+                seatNumber = s.Number,
+                isAvailable = s.IsAvailable
+            })));
+            console.log('Ghế từ cơ sở dữ liệu:', modelSeats);
+            
+            // Render sơ đồ ghế với dữ liệu thực tế
+            renderSeatingPlan();
+            
+            // Khi chọn phòng
+            $('#theaterSelector').change(function() {
+                const theaterId = $(this).val();
+                $('#showtimeSelector').prop('disabled', true).html('<option value="">-- Chọn lịch chiếu --</option>');
+                $('#seatingPlan').html('');
+                if (theaterId) {
+                    // Lấy danh sách lịch chiếu của rạp
+                    $.get('/Admin/Seats/GetShowtimesByTheater', { theaterId }, function(data) {
+                        if (data && data.length > 0) {
+                            let options = '<option value="">-- Chọn lịch chiếu --</option>';
+                            data.forEach(function(show) {
+                                options += `<option value="${show.id}">${show.movieTitle} (${show.showDateTime})</option>`;
+                            });
+                            $('#showtimeSelector').html(options).prop('disabled', false);
+                        } else {
+                            $('#showtimeSelector').html('<option value="">Không có lịch chiếu</option>').prop('disabled', true);
+                        }
+                    });
+                }
+            });
+            
+            // Khi chọn lịch chiếu
+            $('#showtimeSelector').change(function() {
+                const showtimeId = $(this).val();
+                $('#seatingPlan').html('');
+                if (showtimeId) {
+                    // Lấy danh sách ghế của lịch chiếu
+                    $.get('/Admin/Seats/GetSeatsByShowtime', { showtimeId }, function(seats) {
+                        // Render sơ đồ ghế bằng JS (tùy chỉnh theo logic cũ của bạn)
+                        renderSeatingPlan(seats);
+                    });
+                }
+            });
+            
+            // Khi click vào ghế để cập nhật trạng thái
+            $(document).on('click', '.seat', function() {
+                const seatId = $(this).data('id');
+                const seatRow = $(this).data('row');
+                const seatNumber = $(this).data('number');
+                const currentStatus = $(this).data('status') || 'Available';
+                
+                console.log('Đã nhấp vào ghế:', {
+                    id: seatId,
+                    row: seatRow,
+                    number: seatNumber,
+                    status: currentStatus
+                });
+                
+                $('#seatId').val(seatId);
+                $('#seatLabel').text(seatRow + seatNumber);
+                
+                // Set giá trị hiện tại cho dropdown
+                $('#seatStatus').val(currentStatus);
+                
+                // Hiển thị modal
+                $('#updateSeatModal').modal('show');
+            });
+            
+            // Khi nhấn nút cập nhật ghế
+            $('#updateSeatBtn').click(function() {
+                const seatFullId = $('#seatId').val(); // e.g. "seat_A_1"
+                const status = $('#seatStatus').val();
+                
+                // Tìm ghế theo ID
+                const seat = $(`.seat[data-id="${seatFullId}"]`);
+                // Lấy ID database từ thuộc tính data-db-id
+                const id = seat.data('db-id');
+                
+                // Hiển thị thông báo về giá trị đang gửi
+                console.log('Gửi yêu cầu cập nhật ghế:', {
+                    seatId: seatFullId,
+                    dbId: id,
+                    status: status, 
+                    token: $('input[name="__RequestVerificationToken"]').val()
+                });
+                
+                // Gửi request cập nhật trạng thái ghế
+                $.ajax({
+                    url: '/Admin/Seats/UpdateStatus',
+                    type: 'POST',
+                    data: {
+                        id: id,
+                        status: status,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(result) {
+                        console.log('Kết quả thành công:', result);
+                        if (result.success) {
+                            // Cập nhật UI
+                            console.log('Ghế được cập nhật:', seat);
+                            
+                            // Xóa tất cả class trạng thái
+                            seat.removeClass('bg-primary bg-danger bg-warning bg-purple bg-orange bg-dark');
+                            
+                            // Thêm class mới dựa trên trạng thái
+                            if (status === 'Maintenance') {
+                                seat.addClass('bg-danger');
+                                seat.attr('data-status', 'Maintenance');
+                                console.log('Đã đặt màu đỏ cho ghế hư hỏng');
+                            } else if (status === 'Cleaning') {
+                                seat.addClass('bg-dark');
+                                seat.attr('data-status', 'Cleaning');
+                                console.log('Đã đặt màu đen cho ghế đang vệ sinh');
+                            } else if (status === 'Available') {
+                                // Trả về màu mặc định dựa trên loại ghế
+                                const seatType = seat.data('type');
+                                console.log('Loại ghế:', seatType);
+                                if (seatType === 'vip') {
+                                    seat.addClass('bg-purple');
+                                } else if (seatType === 'couple') {
+                                    seat.addClass('bg-orange');
+                                } else {
+                                    seat.addClass('bg-primary');
+                                }
+                                seat.attr('data-status', 'Available');
+                                console.log('Đã đặt màu cho ghế trống');
+                            }
+                            
+                            // Đóng modal
+                            $('#updateSeatModal').modal('hide');
+                            
+                            // Không hiển thị thông báo nữa theo yêu cầu
+                        } else {
+                            console.error('Lỗi từ server:', result);
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Có lỗi xảy ra khi cập nhật trạng thái ghế');
+                            } else {
+                                alert('Có lỗi xảy ra khi cập nhật trạng thái ghế');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Lỗi AJAX:', {xhr: xhr, status: status, error: error});
+                        console.error('Chi tiết lỗi:', xhr.responseText);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Có lỗi xảy ra khi cập nhật trạng thái ghế: ' + error);
+                        } else {
+                            alert('Có lỗi xảy ra khi cập nhật trạng thái ghế: ' + error);
+                        }
+                    }
+                });
+            });
+            
+            // Hàm render sơ đồ ghế
+            function renderSeatingPlan(seats) {
+                const seatingPlan = $('#seatingPlan');
+                seatingPlan.empty();
+                
+                if (!seats || seats.length === 0) {
+                    seatingPlan.html('<div class="text-center text-muted">Không có ghế cho lịch chiếu này.</div>');
+                    return;
+                }
+                
+                // Tạo mapping ghế từ cơ sở dữ liệu: key = row + number (VD: A1)
+                const seatMap = {};
+                seats.forEach(seat => {
+                    seatMap[seat.row + seat.number] = seat;
+                });
+                
+                console.log('Mapping ghế:', seatMap);
+                
+                // Render từng hàng ghế
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const rowDiv = $('<div>').addClass('seat-row');
+                    
+                    // Thêm nhãn hàng
+                    rowDiv.append($('<div>').addClass('row-label').text(row));
+                    
+                    // Thêm các ghế trong hàng
+                    for (let j = 1; j <= seatsPerRow; j++) {
+                        // Tạo key mapping
+                        const seatKey = row + j;
+                        const seatData = seatMap[seatKey];
+                        const seatId = `seat_${row}_${j}`;
+                        // Nếu có seatData thì lấy id thật, nếu không thì null
+                        const dbSeatId = seatData ? seatData.id : '';
+                        
+                        const seatDiv = $('<div>')
+                            .addClass('seat')
+                            .attr('data-id', seatId)
+                            .attr('data-db-id', dbSeatId)
+                            .attr('data-row', row)
+                            .attr('data-number', j)
+                            .text(j);
+                        
+                        // Mặc định loại ghế dựa trên hàng
+                        let seatType = 'standard';
+                        if (row === 'C' || row === 'D' || row === 'E' || row === 'F') {
+                            seatType = 'vip';
+                        } else if (row === 'G' || row === 'H') {
+                            seatType = 'couple';
+                        }
+                        seatDiv.attr('data-type', seatType);
+                        
+                        // Mặc định trạng thái là Available
+                        let status = 'Available';
+                        if (seatData) {
+                            status = seatData.status || 'Available';
+                        }
+                        seatDiv.attr('data-status', status);
+                        
+                        // Áp dụng màu sắc dựa trên trạng thái
+                        if (status === 'Maintenance') {
+                            seatDiv.addClass('bg-danger');
+                        } else if (status === 'Cleaning') {
+                            seatDiv.addClass('bg-dark');
+                        } else {
+                            // Màu mặc định dựa trên loại ghế
+                            if (seatType === 'vip') {
+                                seatDiv.addClass('bg-purple');
+                            } else if (seatType === 'couple') {
+                                seatDiv.addClass('bg-orange');
+                            } else {
+                                seatDiv.addClass('bg-primary');
+                            }
+                        }
+                        rowDiv.append(seatDiv);
+                    }
+                    seatingPlan.append(rowDiv);
+                }
+            }
+        });
+
+        // Tự động reload trang sau khi submit form reset ghế
+        document.addEventListener('DOMContentLoaded', function() {
+            var resetForm = document.querySelector('form[asp-action="ResetAllSeats"]');
+            if (resetForm) {
+                resetForm.addEventListener('submit', function() {
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 800); // Đợi 0.8s để server xử lý xong
+                });
+            }
+        });
+    </script>
+} 

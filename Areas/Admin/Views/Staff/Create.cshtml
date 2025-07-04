@@ -1,0 +1,146 @@
+@model MovieManagement.Models.Staff
+
+@{
+    ViewData["Title"] = "Tạo nhân viên mới";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        body, .container-fluid {
+            background: #f8f9fa !important;
+        }
+        .staff-create-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2.5rem 2rem;
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+        .staff-create-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d3a4b;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            box-shadow: none;
+            font-size: 1rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #36a2eb;
+            box-shadow: 0 0 0 0.15rem rgba(54,162,235,0.12);
+        }
+        .btn-primary {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            background: linear-gradient(135deg, #36a2eb, #007bff);
+            border: none;
+        }
+        .btn-outline-secondary {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.6rem 1.5rem;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="staff-create-card">
+                <div class="staff-create-title mb-4">
+                    <i class="fas fa-user-plus me-2 text-primary"></i> Tạo nhân viên mới
+                </div>
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Position" class="form-label"></label>
+                            <select asp-for="Position" class="form-select">
+                                <option value="">Chọn vị trí</option>
+                                <option value="Nhân viên vé">Nhân viên vé</option>
+                                <option value="Kỹ thuật">Kỹ thuật</option>
+                                <option value="Máy chiếu">Máy chiếu</option>
+                                <option value="Lao công">Lao công</option>
+                                <option value="Bảo vệ">Bảo vệ</option>
+                            </select>
+                            <span asp-validation-for="Position" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Gender" class="form-label"></label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Chọn giới tính</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="BirthDate" class="form-label"></label>
+                            <input asp-for="BirthDate" class="form-control" type="date" />
+                            <span asp-validation-for="BirthDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="HourlyRate" class="form-label"></label>
+                            <input asp-for="HourlyRate" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Bonus" class="form-label"></label>
+                            <input asp-for="Bonus" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="Bonus" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Penalty" class="form-label"></label>
+                            <input asp-for="Penalty" class="form-control" type="number" step="0.01" />
+                            <span asp-validation-for="Penalty" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group mt-3">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+                        <input type="submit" value="Tạo mới" class="btn btn-primary" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

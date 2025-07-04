@@ -1,0 +1,79 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using MovieManagement.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-user-cog me-2"></i>Quản lý tài khoản
+        </h5>
+    </div>
+    <div class="card-body p-0">
+        <ul class="nav nav-pills flex-column">
+            <li class="nav-item">
+                <a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+                    <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+                    <i class="fas fa-key me-2"></i>Mật khẩu
+                </a>
+            </li>
+            @if (hasExternalLogins)
+            {
+                <li id="external-logins" class="nav-item">
+                    <a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">
+                        <i class="fas fa-external-link-alt me-2"></i>Đăng nhập ngoài
+                    </a>
+                </li>
+            }
+            @if (UserManager.SupportsUserTwoFactor)
+            {
+                <li class="nav-item">
+                    <a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">
+                        <i class="fas fa-shield-alt me-2"></i>Xác thực 2 lớp
+                    </a>
+                </li>
+            }
+            <li class="nav-item">
+                <a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+                    <i class="fas fa-database me-2"></i>Dữ liệu cá nhân
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<style>
+    .nav-pills .nav-link {
+        color: #495057;
+        border-radius: 0;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .nav-pills .nav-link:hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .nav-pills .nav-item:last-child .nav-link {
+        border-bottom: none;
+    }
+</style>

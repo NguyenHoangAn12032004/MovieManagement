@@ -1,0 +1,827 @@
+@model MovieManagement.Areas.Admin.Controllers.ConcessionStatisticsViewModel
+
+@{
+    ViewData["Title"] = "Thống kê Bắp Nước";
+}
+
+<style>
+    .stats-card {
+        border: none;
+        border-radius: 20px;
+        transition: all 0.4s ease;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+        color: white;
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .stats-card:hover::before {
+        opacity: 1;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    .stats-card-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stats-card-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stats-card-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .stats-card-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    
+    .stats-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .stats-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .chart-header {
+        border-bottom: 3px solid #f8f9fa;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .chart-title {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+    
+    .top-products-card {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .top-products-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+    }
+    
+    .top-products-table {
+        margin: 0;
+    }
+    
+    .top-products-table tbody tr {
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .top-products-table tbody tr:hover {
+        background: linear-gradient(90deg, #f8f9ff 0%, #e8f2ff 100%);
+        transform: translateX(5px);
+    }
+    
+    .top-products-table td {
+        padding: 20px 30px;
+        vertical-align: middle;
+        border: none;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .product-rank {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 14px;
+        margin-right: 15px;
+    }
+    
+    .filter-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 30px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .filter-section .form-control {
+        border: none;
+        border-radius: 15px;
+        padding: 15px 20px;
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        font-weight: 500;
+    }
+    
+    .filter-section .btn {
+        border-radius: 15px;
+        padding: 15px 30px;
+        font-weight: 600;
+        border: 2px solid white;
+        background: transparent;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .filter-section .btn:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .detailed-table-card {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .detailed-table-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+    }
+    
+    .progress-custom {
+        height: 12px;
+        border-radius: 15px;
+        background: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-bar-custom {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        transition: width 0.6s ease;
+    }
+    
+    .badge-custom {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 40px;
+        margin-bottom: 30px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .page-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .action-buttons .btn {
+        border-radius: 15px;
+        padding: 12px 25px;
+        font-weight: 600;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>
+                    <i class="fas fa-chart-line mr-3"></i>
+                    Thống kê Bắp Nước
+                </h1>
+                <p>Phân tích chi tiết doanh thu và hiệu suất bán hàng</p>
+            </div>
+            <div class="action-buttons">
+                <a href="@Url.Action("Index", "Concession")" class="btn btn-light">
+                    <i class="fas fa-list mr-2"></i> 
+                    Quản lý sản phẩm
+                </a>
+                <button class="btn btn-warning" onclick="exportToExcel()">
+                    <i class="fas fa-download mr-2"></i> 
+                    Xuất báo cáo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h5 class="mb-4">
+            <i class="fas fa-filter mr-2"></i>
+            Bộ lọc thống kê
+        </h5>
+        <form id="filterForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Từ ngày</label>
+                    <input type="date" class="form-control" id="startDate" name="startDate">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Đến ngày</label>
+                    <input type="date" class="form-control" id="endDate" name="endDate">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label fw-bold">Loại sản phẩm</label>
+                    <select class="form-control" id="categoryFilter">
+                        <option value="">Tất cả loại</option>
+                        <option value="drink">Đồ uống</option>
+                        <option value="snack">Đồ ăn</option>
+                        <option value="combo">Combo</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-light me-2" onclick="applyFilter()">
+                        <i class="fas fa-search mr-2"></i> 
+                        Áp dụng
+                    </button>
+                    <button type="button" class="btn btn-outline-light" onclick="resetFilter()">
+                        <i class="fas fa-undo mr-2"></i> 
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-1 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div class="flex-grow-1 text-center">
+                        <div class="stats-number">@Model.ConcessionSales.Count</div>
+                        <div class="stats-label">Loại sản phẩm</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-2 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="flex-grow-1 text-center">
+                        <div class="stats-number">@Model.TotalQuantitySold</div>
+                        <div class="stats-label">Tổng số lượng bán</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-3 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="flex-grow-1 text-center">
+                        <div class="stats-number">@Model.TotalRevenue.ToString("N0")</div>
+                        <div class="stats-label">Tổng doanh thu (đ)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="stats-card stats-card-4 p-4">
+                <div class="d-flex align-items-center">
+                    <div class="stats-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="flex-grow-1 text-center">
+                        <div class="stats-number">@(Model.TotalQuantitySold > 0 ? (Model.TotalRevenue / Model.TotalQuantitySold).ToString("N0") : "0")</div>
+                        <div class="stats-label">Giá trung bình (đ)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    <div class="row">
+        <!-- Daily Sales Chart -->
+        <div class="col-md-8 mb-4">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Biểu đồ doanh thu theo ngày
+                    </h3>
+                    <p class="text-muted mb-0">Theo dõi xu hướng bán hàng 30 ngày gần nhất</p>
+                </div>
+                <div class="chart-body">
+                    <canvas id="dailySalesChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Selling Items -->
+        <div class="col-md-4 mb-4">
+            <div class="top-products-card">
+                <div class="top-products-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trophy mr-2"></i>
+                        Top 5 Bán Chạy
+                    </h4>
+                </div>
+                <div class="top-products-body">
+                    @if (Model.TopSellingItems.Any())
+                    {
+                        <table class="top-products-table table mb-0">
+                            <tbody>
+                                @{
+                                    int rank = 1;
+                                }
+                                @foreach (var item in Model.TopSellingItems)
+                                {
+                                    <tr>
+                                        <td class="py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="product-rank">@rank</div>
+                                                <div>
+                                                    <div class="fw-bold">@item.Name</div>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-shopping-cart mr-1"></i>
+                                                        @item.Quantity sản phẩm
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-end py-3">
+                                            <div class="badge badge-custom bg-success">
+                                                @item.Revenue.ToString("N0") đ
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    rank++;
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <h5>Chưa có dữ liệu</h5>
+                            <p>Dữ liệu sẽ xuất hiện khi có đơn hàng</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>    <!-- Detailed Sales Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="detailed-table-card">
+                <div class="detailed-table-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                <i class="fas fa-table mr-2"></i>
+                                Chi tiết doanh số bán hàng
+                            </h4>
+                        </div>
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-light" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel mr-2"></i>
+                                Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    @if (Model.ConcessionSales.Any())
+                    {
+                        <table class="table mb-0" id="salesTable">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th class="py-4 px-4" style="border: none;">STT</th>
+                                    <th class="py-4 px-4" style="border: none;">Tên sản phẩm</th>
+                                    <th class="py-4 px-4" style="border: none;">Số lượng bán</th>
+                                    <th class="py-4 px-4" style="border: none;">Doanh thu</th>
+                                    <th class="py-4 px-4" style="border: none;">% Tổng doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int index = 1;
+                                }
+                                @foreach (var item in Model.ConcessionSales)
+                                {
+                                    <tr style="border-bottom: 1px solid #f1f1f1; transition: all 0.3s ease;">
+                                        <td class="py-4 px-4">
+                                            <div class="product-rank" style="width: 30px; height: 30px; font-size: 12px;">
+                                                @index
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="fw-bold text-dark">@item.Name</div>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <span class="badge badge-custom" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                                @item.Quantity
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <span class="badge badge-custom" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                                                @item.Revenue.ToString("N0") đ
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            @{
+                                                var percentage = Model.TotalRevenue > 0 ? (item.Revenue / Model.TotalRevenue * 100) : 0;
+                                            }
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress-custom flex-grow-1 me-3">
+                                                    <div class="progress-bar-custom" style="width: @percentage.ToString("F1")%"></div>
+                                                </div>
+                                                <span class="fw-bold text-primary">@percentage.ToString("F1")%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            </tbody>
+                            <tfoot style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                                <tr>
+                                    <th colspan="2" class="py-4 px-4" style="border: none;">
+                                        <i class="fas fa-calculator mr-2"></i>
+                                        Tổng cộng
+                                    </th>
+                                    <th class="py-4 px-4" style="border: none;">
+                                        <span class="badge bg-light text-dark">@Model.TotalQuantitySold</span>
+                                    </th>
+                                    <th class="py-4 px-4" style="border: none;">
+                                        <span class="badge bg-light text-dark">@Model.TotalRevenue.ToString("N0") đ</span>
+                                    </th>
+                                    <th class="py-4 px-4" style="border: none;">
+                                        <span class="badge bg-light text-dark">100%</span>
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <h5>Chưa có dữ liệu bán hàng</h5>
+                            <p>Dữ liệu sẽ xuất hiện khi có đơn hàng được thanh toán thành công.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Set default dates
+            var today = new Date();
+            var thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            $('#endDate').val(today.toISOString().split('T')[0]);
+            $('#startDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
+            
+            // Daily Sales Chart with modern styling
+            var dailySalesData = @Html.Raw(Json.Serialize(Model.DailySales));
+            
+            var ctx = document.getElementById('dailySalesChart').getContext('2d');
+            
+            // Create gradient for chart
+            var gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)');
+            gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+            
+            var gradient2 = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient2.addColorStop(0, 'rgba(240, 147, 251, 0.3)');
+            gradient2.addColorStop(1, 'rgba(240, 147, 251, 0.05)');
+            
+            var dailySalesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailySalesData.map(item => {
+                        var date = new Date(item.date);
+                        return date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' });
+                    }),
+                    datasets: [{
+                        label: 'Doanh thu (đ)',
+                        data: dailySalesData.map(item => item.revenue),
+                        borderColor: '#667eea',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }, {
+                        label: 'Số lượng',
+                        data: dailySalesData.map(item => item.quantity),
+                        borderColor: '#f093fb',
+                        backgroundColor: gradient2,
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1',
+                        pointBackgroundColor: '#f093fb',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 14,
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#667eea',
+                            borderWidth: 1,
+                            cornerRadius: 15,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                                    } else {
+                                        return 'Số lượng: ' + context.parsed.y + ' sản phẩm';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                },
+                                color: '#6c757d'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Doanh thu (đ)',
+                                font: {
+                                    size: 14,
+                                    weight: '600'
+                                },
+                                color: '#667eea'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#6c757d',
+                                callback: function(value) {
+                                    return value.toLocaleString('vi-VN');
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Số lượng',
+                                font: {
+                                    size: 14,
+                                    weight: '600'
+                                },
+                                color: '#f093fb'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#6c757d'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Add hover effects to table rows
+            $('.table tbody tr').hover(
+                function() {
+                    $(this).css('background', 'linear-gradient(90deg, #f8f9ff 0%, #e8f2ff 100%)');
+                    $(this).css('transform', 'translateX(5px)');
+                },
+                function() {
+                    $(this).css('background', '');
+                    $(this).css('transform', '');
+                }
+            );
+        });
+
+        // Filter functions
+        function applyFilter() {
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
+            var category = $('#categoryFilter').val();
+            
+            // Show loading state
+            showLoading();
+            
+            // Simulate filter action - in real app, this would make an AJAX call
+            setTimeout(function() {
+                hideLoading();
+                showAlert('success', 'Đã áp dụng bộ lọc thành công!');
+            }, 1000);
+        }
+        
+        function resetFilter() {
+            $('#startDate').val('');
+            $('#endDate').val('');
+            $('#categoryFilter').val('');
+            showAlert('info', 'Đã reset bộ lọc!');
+        }
+        
+        function showLoading() {
+            $('body').append('<div class="loading-overlay"><div class="spinner-border text-primary" role="status"></div></div>');
+        }
+        
+        function hideLoading() {
+            $('.loading-overlay').remove();
+        }
+        
+        function showAlert(type, message) {
+            var alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            $('body').append(alertHtml);
+            
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 3000);
+        }
+
+        // Export to Excel function with modern styling
+        function exportToExcel() {
+            showLoading();
+            
+            setTimeout(function() {
+                var table = document.getElementById('salesTable');
+                var wb = XLSX.utils.table_to_book(table, {sheet: "Thống kê bắp nước"});
+                var filename = 'ThongKeBapNuoc_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+                XLSX.writeFile(wb, filename);
+                
+                hideLoading();
+                showAlert('success', 'Đã xuất báo cáo Excel thành công!');
+            }, 1000);
+        }
+    </script>
+    
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+}

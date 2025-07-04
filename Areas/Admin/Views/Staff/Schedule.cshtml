@@ -1,0 +1,396 @@
+@model MovieManagement.Models.Staff
+
+@{
+    ViewData["Title"] = "Đăng ký lịch làm";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    var staff = ViewBag.Staff as Staff;
+    var weekRange = ViewBag.WeekRange;
+}
+
+@section Styles {
+    <style>
+        .schedule-staff-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2.5rem 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .schedule-staff-card h2 {
+            font-weight: bold;
+            color: #198754;
+        }
+        .schedule-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05rem;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+        }
+        .schedule-cell {
+            min-width: 80px;
+            min-height: 50px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .schedule-cell:hover {
+            background-color: #f8f9fa;
+        }
+        .schedule-cell.selected {
+            background-color: #ffc107;
+        }
+        .schedule-cell.disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .schedule-cell.disabled:hover {
+            background-color: #e9ecef;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #fff;
+            border: none;
+            font-weight: 600;
+            padding: 0.6rem 2.2rem;
+            border-radius: 8px;
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #38f9d7, #43e97b);
+        }
+        .btn-secondary {
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 0.6rem 2.2rem;
+        }
+        .schedule-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="schedule-staff-card">
+                <div class="d-flex justify-content-between mb-4">
+                    <h2 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Đăng ký lịch làm: <span style="color:#198754">@Model.FullName</span></h2>
+                </div>
+
+                @Html.AntiForgeryToken()
+
+                <div class="card mb-3 border-0" style="background:transparent;box-shadow:none;">
+                    <div class="card-body p-0">
+                        <div class="form-group mb-3">
+                            <label class="form-label schedule-label">Tuần: <strong>@weekRange</strong></label>
+                            <div class="d-flex mb-2">
+                                <button id="prevWeek" class="btn btn-sm btn-outline-primary me-2">
+                                    <i class="fas fa-chevron-left"></i> Tuần trước
+                                </button>
+                                <button id="currentWeek" class="btn btn-sm btn-outline-info me-2">
+                                    Tuần hiện tại
+                                </button>
+                                <button id="nextWeek" class="btn btn-sm btn-outline-primary">
+                                    Tuần sau <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered schedule-table bg-white">
+                                <thead>
+                                    <tr class="text-center align-middle">
+                                        <th></th>
+                                        <th id="monday-header">Thứ hai</th>
+                                        <th id="tuesday-header">Thứ ba</th>
+                                        <th id="wednesday-header">Thứ tư</th>
+                                        <th id="thursday-header">Thứ năm</th>
+                                        <th id="friday-header">Thứ sáu</th>
+                                        <th id="saturday-header">Thứ bảy</th>
+                                        <th id="sunday-header">Chủ nhật</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="text-center">
+                                        <td class="align-middle">Ca 1<br/>(6:00-11:30)</td>
+                                        <td class="schedule-cell" data-day="monday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="tuesday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="wednesday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="thursday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="friday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="saturday" data-shift="Ca1"></td>
+                                        <td class="schedule-cell" data-day="sunday" data-shift="Ca1"></td>
+                                    </tr>
+                                    <tr class="text-center">
+                                        <td class="align-middle">Ca 2<br/>(12:30-18:00)</td>
+                                        <td class="schedule-cell" data-day="monday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="tuesday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="wednesday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="thursday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="friday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="saturday" data-shift="Ca2"></td>
+                                        <td class="schedule-cell" data-day="sunday" data-shift="Ca2"></td>
+                                    </tr>
+                                    <tr class="text-center">
+                                        <td class="align-middle">Ca 3<br/>(19:00-2:00)</td>
+                                        <td class="schedule-cell" data-day="monday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="tuesday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="wednesday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="thursday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="friday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="saturday" data-shift="Ca3"></td>
+                                        <td class="schedule-cell" data-day="sunday" data-shift="Ca3"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="schedule-actions mt-4">
+                            <a href="/Admin/Staff" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                            </a>
+                            <button id="saveSchedule" class="btn btn-success">
+                                <i class="fas fa-save"></i> Lưu lịch làm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Staff ID
+            const staffId = @Model.Id;
+            
+            // Ngày đầu tuần (thứ 2)
+            let currentDate = new Date();
+            let mondayDate = getMonday(currentDate);
+            
+            // Hiển thị lịch
+            updateScheduleDisplay(mondayDate);
+            
+            // Xử lý khi nhấp vào ô lịch
+            $('.schedule-cell').on('click', function() {
+                // Nếu ô bị disable (ngày quá khứ) thì không cho chọn
+                if (!$(this).hasClass('disabled')) {
+                    $(this).toggleClass('selected');
+                }
+            });
+            
+            // Nút tuần trước
+            $('#prevWeek').on('click', function() {
+                mondayDate.setDate(mondayDate.getDate() - 7);
+                updateScheduleDisplay(mondayDate);
+            });
+            
+            // Nút tuần hiện tại
+            $('#currentWeek').on('click', function() {
+                mondayDate = getMonday(new Date());
+                updateScheduleDisplay(mondayDate);
+            });
+            
+            // Nút tuần sau
+            $('#nextWeek').on('click', function() {
+                mondayDate.setDate(mondayDate.getDate() + 7);
+                updateScheduleDisplay(mondayDate);
+            });
+            
+            // Nút lưu lịch làm
+            $('#saveSchedule').on('click', function() {
+                let schedules = [];
+                
+                $('.schedule-cell.selected').each(function() {
+                    const dayName = $(this).data('day');
+                    const shift = $(this).data('shift');
+                    const dayOffset = getDayOffset(dayName);
+                    
+                    // Tạo ngày từ ngày thứ 2 + offset
+                    const scheduleDate = new Date(new Date(mondayDate).setDate(mondayDate.getDate() + dayOffset));
+                    
+                    schedules.push({
+                        staffId: staffId,
+                        date: formatDate(scheduleDate, 'yyyy-MM-dd'),
+                        shift: shift
+                    });
+                });
+                
+                if (schedules.length === 0) {
+                    alert('Vui lòng chọn ít nhất một ca làm việc!');
+                    return;
+                }
+                
+                // Gửi dữ liệu đến server
+                $.ajax({
+                    url: '@Url.Action("SaveSchedule", "Staff", new { area = "Admin" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(schedules),
+                    beforeSend: function() {
+                        $('#saveSchedule').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Lưu lịch làm thành công!');
+                            // Không reload trang mà hiển thị lịch đã lưu
+                            loadScheduleData(mondayDate);
+                        } else {
+                            alert('Lỗi: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        let errorMessage = 'Lỗi khi lưu lịch làm!';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.statusText) {
+                            errorMessage = 'Lỗi: ' + xhr.statusText;
+                        }
+                        alert(errorMessage);
+                        console.error(xhr.responseText);
+                    },
+                    complete: function() {
+                        $('#saveSchedule').prop('disabled', false).html('<i class="fas fa-save"></i> Lưu lịch làm');
+                    }
+                });
+            });
+            
+            // Hàm lấy ngày thứ 2
+            function getMonday(date) {
+                const day = date.getDay();
+                const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(date.setDate(diff));
+            }
+            
+            // Hàm lấy offset từ thứ 2
+            function getDayOffset(dayName) {
+                switch(dayName) {
+                    case 'monday': return 0;
+                    case 'tuesday': return 1;
+                    case 'wednesday': return 2;
+                    case 'thursday': return 3;
+                    case 'friday': return 4;
+                    case 'saturday': return 5;
+                    case 'sunday': return 6;
+                    default: return 0;
+                }
+            }
+            
+            // Cập nhật hiển thị lịch
+            function updateScheduleDisplay(mondayDate) {
+                // Format: DD/MM - DD/MM/YYYY
+                const sundayDate = new Date(new Date(mondayDate).setDate(mondayDate.getDate() + 6));
+                
+                const weekRangeText = `${formatDate(mondayDate, 'dd/MM')} - ${formatDate(sundayDate, 'dd/MM/yyyy')}`;
+                $('label.form-label strong').text(weekRangeText);
+                
+                // Cập nhật tiêu đề các ngày trong tuần
+                updateHeaderDates(mondayDate);
+                
+                // Reset lịch
+                $('.schedule-cell').removeClass('selected');
+                
+                // Tải dữ liệu lịch
+                loadScheduleData(mondayDate);
+            }
+            
+            // Cập nhật tiêu đề các ngày trong tuần
+            function updateHeaderDates(mondayDate) {
+                const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                const dayLabels = ['Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy', 'Chủ nhật'];
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset giờ để so sánh chỉ ngày
+                
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(new Date(mondayDate).setDate(mondayDate.getDate() + i));
+                    const dayText = `${dayLabels[i]}<br/>${formatDate(date, 'dd/MM')}`;
+                    $(`#${days[i]}-header`).html(dayText);
+                    
+                    // Vô hiệu hóa các ngày quá khứ
+                    const isPastDay = date < today;
+                    $(`.schedule-cell[data-day="${days[i]}"]`).each(function() {
+                        if (isPastDay) {
+                            $(this).addClass('disabled').css('background-color', '#e9ecef').css('cursor', 'not-allowed');
+                        } else {
+                            $(this).removeClass('disabled').css('background-color', '').css('cursor', 'pointer');
+                        }
+                    });
+                }
+            }
+            
+            // Format ngày
+            function formatDate(date, format) {
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                
+                if (format === 'dd/MM') {
+                    return `${day}/${month}`;
+                } else if (format === 'yyyy-MM-dd') {
+                    return `${year}-${month}-${day}`;
+                } else {
+                    return `${day}/${month}/${year}`;
+                }
+            }
+            
+            // Tải dữ liệu lịch
+            function loadScheduleData(mondayDate) {
+                // Gọi API để lấy dữ liệu lịch làm của nhân viên từ server
+                $.ajax({
+                    url: '@Url.Action("GetStaffSchedule", "Staff", new { area = "Admin" })',
+                    type: 'GET',
+                    data: {
+                        staffId: staffId,
+                        startDate: mondayDate.toISOString()
+                    },
+                    success: function(schedules) {
+                        // Xóa tất cả các ô đã chọn trước đó
+                        $('.schedule-cell').removeClass('selected');
+                        
+                        // Tạo mảng các ngày trong tuần
+                        const weekDays = [];
+                        for (let i = 0; i < 7; i++) {
+                            const day = new Date(new Date(mondayDate).setDate(mondayDate.getDate() + i));
+                            weekDays.push(formatDate(day, 'yyyy-MM-dd'));
+                        }
+                        
+                        // Hiển thị lịch làm
+                        schedules.forEach(function(schedule) {
+                            const scheduleDate = schedule.date.split('T')[0]; // Format: YYYY-MM-DD
+                            
+                            // Tìm ngày trong tuần
+                            const dayIndex = weekDays.indexOf(scheduleDate);
+                            if (dayIndex === -1) return; // Không thuộc tuần này
+                            
+                            let dayName;
+                            switch(dayIndex) {
+                                case 0: dayName = 'monday'; break;
+                                case 1: dayName = 'tuesday'; break;
+                                case 2: dayName = 'wednesday'; break;
+                                case 3: dayName = 'thursday'; break;
+                                case 4: dayName = 'friday'; break;
+                                case 5: dayName = 'saturday'; break;
+                                case 6: dayName = 'sunday'; break;
+                                default: return;
+                            }
+                            
+                            // Tìm ô lịch tương ứng và đánh dấu đã chọn
+                            $(`.schedule-cell[data-day="${dayName}"][data-shift="${schedule.shift}"]`).addClass('selected');
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Lỗi khi tải lịch làm:", error);
+                    }
+                });
+            }
+        });
+    </script>
+} 

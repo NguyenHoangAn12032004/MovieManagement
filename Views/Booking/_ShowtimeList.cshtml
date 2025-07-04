@@ -1,0 +1,18 @@
+@model List<MovieManagement.Models.Showtime>
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">Không có suất chiếu nào cho rạp này.</div>
+}
+else
+{
+    <div class="showtime-btn-container d-flex gap-2 flex-wrap justify-content-center">
+        @foreach (var showtime in Model)
+        {
+            <a asp-controller="Booking" asp-action="SelectSeats" asp-route-showtimeId="@showtime.Id" class="btn btn-outline-success">
+                <span class="time">@showtime.ShowDateTime.ToString("HH:mm")</span>
+                <span class="screen-type ms-2">@showtime.ScreenType</span>
+                <span class="genre ms-2">@showtime.Movie?.Genre</span>
+            </a>
+        }
+    </div>
+} 

@@ -1,0 +1,126 @@
+@model MovieManagement.Areas.Admin.Models.EditStaffAccountViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa tài khoản nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="bg-light rounded h-100 p-4">
+                <h6 class="mb-4">Chỉnh sửa tài khoản nhân viên</h6>
+                
+                @if (ViewBag.Message != null)
+                {
+                    <div class="alert alert-success">@ViewBag.Message</div>
+                }
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger">@ViewBag.Error</div>
+                }
+
+                <!-- Thông tin nhân viên -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-id-card me-2"></i>Thông tin nhân viên</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Họ tên:</strong> @Model.Staff.FullName</p>
+                                <p><strong>Email:</strong> @Model.Staff.Email</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Vị trí:</strong> @Model.Staff.Position</p>
+                                <p><strong>Lương/giờ:</strong> @Model.Staff.HourlyRate.ToString("N0") VNĐ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="UserId" />
+                    <input type="hidden" asp-for="StaffId" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="UserName" class="form-label">Tên đăng nhập</label>
+                            <input asp-for="UserName" class="form-control" readonly />
+                            <small class="text-muted">Tên đăng nhập không thể thay đổi</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Vai trò hiện tại</label>
+                            <div>
+                                @if (ViewBag.UserRoles != null)
+                                {
+                                    @foreach (string role in ViewBag.UserRoles)
+                                    {
+                                        <span class="badge bg-primary me-2">@role</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Không có vai trò</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Thay đổi vai trò</label>
+                            <select asp-for="SelectedRoles" class="form-select" multiple>
+                                @if (ViewBag.Roles != null)
+                                {
+                                    @foreach (var role in (List<Microsoft.AspNetCore.Identity.IdentityRole>)ViewBag.Roles)
+                                    {
+                                        <option value="@role.Name">@role.Name</option>
+                                    }
+                                }
+                            </select>
+                            <small class="text-muted">Giữ Ctrl để chọn nhiều vai trò</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="NewPassword" class="form-label">Mật khẩu mới (tùy chọn)</label>
+                            <input asp-for="NewPassword" class="form-control" type="password" />
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                            <small class="text-muted">Để trống nếu không đổi mật khẩu</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">Tài khoản hoạt động</label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,216 @@
+@model MovieManagement.Models.Movie
+
+@{
+    ViewData["Title"] = "Thêm phim mới";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4 mb-4">Thêm phim mới</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-film me-1"></i>
+            Thông tin phim
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label">Tiêu đề phim</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="ReleaseDate" class="form-label">Ngày phát hành</label>
+                            <input asp-for="ReleaseDate" class="form-control" type="date" />
+                            <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Duration" class="form-label">Thời lượng (phút)</label>
+                            <input asp-for="Duration" class="form-control" type="number" />
+                            <span asp-validation-for="Duration" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Thể loại</label>
+                            <input type="text" name="GenreNames" class="form-control" placeholder="Nhập thể loại phim (VD: Hành động, Khoa học viễn tưởng)" />
+                            <div class="form-text">Có thể nhập nhiều thể loại, cách nhau bằng dấu phẩy</div>
+                        </div>
+                        
+                        <!-- Hidden field for backward compatibility -->
+                        <div class="mb-3" style="display: none;">
+                            <label asp-for="GenreId" class="form-label">Thể loại (Legacy)</label>
+                            <select asp-for="GenreId" class="form-select" asp-items="ViewBag.GenreId">
+                                <option value="">-- Chọn thể loại --</option>
+                            </select>
+                            <span asp-validation-for="GenreId" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Status" class="form-label">Trạng thái</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Active">Đang hoạt động</option>
+                                <option value="Inactive">Ngừng hoạt động</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Language" class="form-label">Ngôn ngữ</label>
+                            <input asp-for="Language" class="form-control" />
+                            <span asp-validation-for="Language" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="TrailerUrl" class="form-label">URL Trailer</label>
+                            <input asp-for="TrailerUrl" class="form-control" />
+                            <span asp-validation-for="TrailerUrl" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="PosterPath" class="form-label">URL Ảnh bìa</label>
+                            <input asp-for="PosterPath" class="form-control" />
+                            <span asp-validation-for="PosterPath" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="BackdropPath" class="form-label">URL Ảnh nền</label>
+                            <input asp-for="BackdropPath" class="form-control" />
+                            <span asp-validation-for="BackdropPath" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Director" class="form-label">Đạo diễn</label>
+                            <input asp-for="Director" class="form-control" />
+                            <span asp-validation-for="Director" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Cast" class="form-label">Diễn viên</label>
+                            <textarea asp-for="Cast" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Cast" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái phim</label>
+                            <div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input status-checkbox" type="checkbox" asp-for="IsNowShowing" id="isNowShowing">
+                                    <label class="form-check-label" for="isNowShowing">Đang chiếu</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input status-checkbox" type="checkbox" asp-for="IsComingSoon" id="isComingSoon">
+                                    <label class="form-check-label" for="isComingSoon">Sắp chiếu</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsFeatured" id="isFeatured">
+                                    <label class="form-check-label" for="isFeatured">Nổi bật</label>
+                                </div>
+                            </div>
+                            <div class="text-danger status-validation-message mt-2" style="display: none;">
+                                Phim không thể vừa 'Đang chiếu' vừa 'Sắp chiếu'
+                            </div>
+                            <span asp-validation-for="IsNowShowing" class="text-danger"></span>
+                            <span asp-validation-for="IsComingSoon" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label asp-for="Overview" class="form-label">Tóm tắt</label>
+                    <textarea asp-for="Overview" class="form-control" rows="5"></textarea>
+                    <span asp-validation-for="Overview" class="text-danger"></span>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    
+    <script>
+        $(document).ready(function() {
+            // Handle status constraints
+            $('.status-checkbox').change(function() {
+                validateStatusCheckboxes();
+            });
+            
+            function validateStatusCheckboxes() {
+                var isNowShowing = $('#isNowShowing').is(':checked');
+                var isComingSoon = $('#isComingSoon').is(':checked');
+                
+                if (isNowShowing && isComingSoon) {
+                    $('.status-validation-message').show();
+                    $('#isNowShowing, #isComingSoon').addClass('is-invalid');
+                    return false;
+                } else {
+                    $('.status-validation-message').hide();
+                    $('#isNowShowing, #isComingSoon').removeClass('is-invalid');
+                    return true;
+                }
+            }
+            
+            // Validate genre input
+            function validateGenreInput() {
+                var genreValue = $('input[name="GenreNames"]').val().trim();
+                
+                if (genreValue === '') {
+                    $('.genre-validation-message').text('Vui lòng nhập ít nhất một thể loại').show();
+                    $('input[name="GenreNames"]').addClass('is-invalid');
+                    return false;
+                } else {
+                    $('.genre-validation-message').hide();
+                    $('input[name="GenreNames"]').removeClass('is-invalid');
+                    return true;
+                }
+            }
+            
+            // Override form submission to validate
+            $('form').submit(function(e) {
+                var isStatusValid = validateStatusCheckboxes();
+                var isGenreValid = validateGenreInput();
+                
+                if (!isStatusValid || !isGenreValid) {
+                    e.preventDefault();
+                    
+                    // Scroll to first error
+                    if (!isGenreValid) {
+                        $('html, body').animate({
+                            scrollTop: $('input[name="GenreNames"]').offset().top - 100
+                        }, 500);
+                    } else if (!isStatusValid) {
+                        $('html, body').animate({
+                            scrollTop: $('.status-validation-message').offset().top - 100
+                        }, 500);
+                    }
+                    
+                    return false;
+                }
+                return true;
+            });
+            
+            // Add validation message div if not exists
+            if ($('.genre-validation-message').length === 0) {
+                $('input[name="GenreNames"]').after('<div class="genre-validation-message text-danger mt-2" style="display: none;"></div>');
+            }
+        });
+    </script>
+} 

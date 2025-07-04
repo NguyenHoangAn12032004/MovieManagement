@@ -1,0 +1,204 @@
+@model MovieManagement.Models.Seat
+
+@{
+    ViewData["Title"] = "Chi tiết ghế";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-chair me-2"></i>Chi tiết ghế</h5>
+        <div>
+            <a href="/Admin/Seats/Theater/@Model.Showtime.TheaterId" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        @{
+                            string seatClass = "bg-primary";
+                            string seatStatusName = "Có sẵn";
+                            
+                            if (Model.Type.ToLower() == "vip")
+                            {
+                                seatClass = "bg-purple";
+                            }
+                            else if (Model.Type.ToLower() == "couple")
+                            {
+                                seatClass = "bg-orange";
+                            }
+                            
+                            if (Model.Status.ToLower() == "maintenance")
+                            {
+                                seatClass = "bg-danger";
+                                seatStatusName = "Hư hỏng";
+                            }
+                            else if (Model.Status.ToLower() == "cleaning")
+                            {
+                                seatClass = "bg-warning";
+                                seatStatusName = "Đang vệ sinh";
+                            }
+                            else if (!Model.IsAvailable)
+                            {
+                                seatClass = "bg-secondary";
+                                seatStatusName = "Đã đặt";
+                            }
+                        }
+                        
+                        <div class="seat @seatClass mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                            @Model.Number
+                        </div>
+                        
+                        <h5>Ghế @Model.Row@Model.Number</h5>
+                        <p class="mb-0">
+                            Trạng thái: <span class="badge @seatClass">@seatStatusName</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%">ID</th>
+                                <td>@Model.Id</td>
+                            </tr>
+                            <tr>
+                                <th>Rạp</th>
+                                <td>@Model.Showtime.Theater.Name</td>
+                            </tr>
+                            <tr>
+                                <th>Hàng</th>
+                                <td>@Model.Row</td>
+                            </tr>
+                            <tr>
+                                <th>Số ghế</th>
+                                <td>@Model.Number</td>
+                            </tr>
+                            <tr>
+                                <th>Loại ghế</th>
+                                <td>
+                                    @{
+                                        string typeName = "Ghế thường";
+                                        string typeColor = "primary";
+                                        
+                                        if (Model.Type.ToLower() == "vip")
+                                        {
+                                            typeName = "Ghế VIP";
+                                            typeColor = "purple";
+                                        }
+                                        else if (Model.Type.ToLower() == "couple")
+                                        {
+                                            typeName = "Ghế đôi";
+                                            typeColor = "orange";
+                                        }
+                                    }
+                                    <span class="badge bg-@typeColor">@typeName</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Giá</th>
+                                <td>@Model.Price.ToString("N0") VNĐ</td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái</th>
+                                <td>
+                                    <span class="badge @seatClass">@seatStatusName</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Phim hiện tại</th>
+                                <td>@(Model.Showtime?.Movie?.Title ?? "Không có phim")</td>
+                            </tr>
+                            <tr>
+                                <th>Suất chiếu</th>
+                                <td>@(Model.Showtime != null ? Model.Showtime.ShowDateTime.ToString("dd/MM/yyyy HH:mm") : "Không có suất chiếu")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Cập nhật trạng thái</h5>
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-primary update-status" data-status="available">
+                            <i class="bi bi-check-circle me-1"></i> Đặt trạng thái: Có sẵn
+                        </button>
+                        <button class="btn btn-danger update-status" data-status="maintenance">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Đặt trạng thái: Hư hỏng
+                        </button>
+                        <button class="btn btn-warning update-status" data-status="cleaning">
+                            <i class="bi bi-bucket me-1"></i> Đặt trạng thái: Đang vệ sinh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .bg-purple {
+            background-color: #9966CC;
+        }
+        
+        .bg-orange {
+            background-color: #FFA500;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Khi click vào nút cập nhật trạng thái
+            $('.update-status').click(function() {
+                const status = $(this).data('status');
+                
+                // Confirm before updating
+                if (confirm('Bạn có chắc chắn muốn cập nhật trạng thái ghế?')) {
+                    // Gửi request cập nhật trạng thái ghế
+                    $.ajax({
+                        url: '/Admin/Seats/UpdateStatus',
+                        type: 'POST',
+                        data: {
+                            id: @Model.Id,
+                            status: status,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(result) {
+                            if (result.success) {
+                                // Hiển thị thông báo
+                                toastr.success('Cập nhật trạng thái ghế thành công');
+                                
+                                // Reload page sau 1 giây
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                toastr.error('Có lỗi xảy ra khi cập nhật trạng thái ghế');
+                            }
+                        },
+                        error: function() {
+                            toastr.error('Có lỗi xảy ra khi cập nhật trạng thái ghế');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+    
+    <!-- Thêm toastr để hiển thị thông báo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    
+    <!-- Token cho AJAX -->
+    @Html.AntiForgeryToken()
+} 

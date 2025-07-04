@@ -1,0 +1,160 @@
+@model IEnumerable<MovieManagement.Models.Staff>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section Styles {
+    <style>
+        body, .container-fluid {
+            background: #f8f9fa !important;
+        }
+        .staff-management-header {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+        }
+        .staff-table-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            border: 1px solid #e9ecef;
+            padding: 2rem;
+        }
+        .table.table-hover th {
+            background: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            border: none;
+        }
+        .table.table-hover td {
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        .table.table-hover tbody tr:hover {
+            background: #f4f7fb;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-group .btn {
+            border-radius: 8px !important;
+            font-weight: 500;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            margin-right: 0.25rem;
+        }
+        .btn-group .btn:last-child {
+            margin-right: 0;
+        }
+    </style>
+}
+
+<div class="container-fluid pt-4 px-4">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="staff-management-header mb-0">
+                <div class="d-flex justify-content-between mb-4">
+                    <h2 class="mb-0 fw-bold"><i class="fas fa-users me-2 text-primary"></i>Quản lý nhân viên</h2>
+                    <div class="dropdown">
+                        <button class="btn btn-success fw-bold rounded-pill px-4 py-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-plus"></i> Tạo mới
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-action="Create">
+                                <i class="fas fa-user me-2"></i>Chỉ tạo nhân viên
+                            </a></li>
+                            <li><a class="dropdown-item" asp-action="CreateWithAccount">
+                                <i class="fas fa-user-plus me-2"></i>Tạo nhân viên + tài khoản
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="staff-table-card mt-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="staffTable">
+                        <thead>
+                            <tr>
+                                <th>@Html.DisplayNameFor(model => model.Id)</th>
+                                <th>@Html.DisplayNameFor(model => model.FullName)</th>
+                                <th>@Html.DisplayNameFor(model => model.Email)</th>
+                                <th>@Html.DisplayNameFor(model => model.PhoneNumber)</th>
+                                <th>@Html.DisplayNameFor(model => model.Position)</th>
+                                <th>@Html.DisplayNameFor(model => model.HourlyRate)</th>
+                                <th>@Html.DisplayNameFor(model => model.Gender)</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.FullName)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Email)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Position)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.HourlyRate)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.Gender)</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm" title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i> Sửa
+                                            </a>
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Chi tiết">
+                                                <i class="fas fa-info-circle"></i> Chi tiết
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Xóa">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </a>
+                                            <a asp-action="Schedule" asp-route-id="@item.Id" class="btn btn-success btn-sm" title="Đăng ký lịch làm">
+                                                <i class="fas fa-calendar-alt"></i> Lịch làm
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#staffTable').DataTable({
+                responsive: true,
+                searching: true,
+                ordering: true,
+                info: true,
+                paging: true,
+                lengthChange: true,
+                autoWidth: false,
+                language: {
+                    search: "Tìm kiếm:",
+                    lengthMenu: "Hiển thị _MENU_ mục",
+                    info: "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    infoEmpty: "Hiển thị 0 đến 0 của 0 mục",
+                    infoFiltered: "(được lọc từ _MAX_ mục)",
+                    zeroRecords: "Không tìm thấy kết quả phù hợp",
+                    emptyTable: "Không có dữ liệu",
+                    paginate: {
+                        first: "Đầu",
+                        previous: "Trước",
+                        next: "Tiếp",
+                        last: "Cuối"
+                    }
+                },
+                columnDefs: [
+                    { orderable: false, targets: -1 }
+                ]
+            });
+        });
+    </script>
+} 

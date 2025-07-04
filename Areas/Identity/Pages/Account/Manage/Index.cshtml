@@ -1,0 +1,237 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+                <div class="card-header bg-gradient py-3" style="background: linear-gradient(45deg, #4e73df, #224abe);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle me-2 text-white" style="font-size: 1.5rem;"></i>
+                        <h4 class="mb-0 text-white">@ViewData["Title"]</h4>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <partial name="_StatusMessage" for="StatusMessage" />
+                    
+                    <form id="profile-form" method="post">
+                        <div class="row g-4">
+                            <div class="col-md-4 text-center">
+                                <div class="position-relative d-inline-block">
+                                    <div class="avatar-placeholder bg-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
+                                         style="width: 140px; height: 140px; font-size: 3.5rem; background: linear-gradient(45deg, #4e73df, #224abe);">
+                                        <span class="text-white">@(string.IsNullOrEmpty(Model.Input.FirstName) ? Model.Username.Substring(0, 1).ToUpper() : Model.Input.FirstName.Substring(0, 1).ToUpper())</span>
+                                    </div>
+                                    <button type="button" class="btn btn-light position-absolute bottom-0 end-0 rounded-circle shadow-sm" 
+                                            style="width: 36px; height: 36px; padding: 0; border: 2px solid white;">
+                                        <i class="fas fa-camera text-primary"></i>
+                                    </button>
+                                </div>
+                                <h5 class="mt-3 mb-1 fw-bold">@(string.IsNullOrEmpty(Model.Input.FirstName) ? Model.Username : $"{Model.Input.FirstName} {Model.Input.LastName}")</h5>
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    Thành viên từ @DateTime.Now.AddYears(-1).ToString("MMMM yyyy")
+                                </p>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <div class="mb-4">
+                                    <h6 class="text-primary fw-bold mb-3">
+                                        <i class="fas fa-user-edit me-2"></i>Thông tin tài khoản
+                                    </h6>
+                                    
+                                    <div class="mb-4">
+                                        <label asp-for="Input.FirstName" class="form-label fw-semibold">Họ</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </span>
+                                            <input asp-for="Input.FirstName" class="form-control" placeholder="Nhập họ của bạn" />
+                                        </div>
+                                        <span asp-validation-for="Input.FirstName" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label asp-for="Input.LastName" class="form-label fw-semibold">Tên</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </span>
+                                            <input asp-for="Input.LastName" class="form-control" placeholder="Nhập tên của bạn" />
+                                        </div>
+                                        <span asp-validation-for="Input.LastName" class="text-danger small"></span>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label asp-for="Input.PhoneNumber" class="form-label fw-semibold">Số điện thoại</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light">
+                                                <i class="fas fa-phone text-primary"></i>
+                                            </span>
+                                            <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn" />
+                                        </div>
+                                        <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="text-primary fw-bold mb-3">
+                                        <i class="fas fa-shield-alt me-2"></i>Cài đặt bảo mật
+                                    </h6>
+                                    <div class="d-flex gap-2">
+                                        <a asp-page="./ChangePassword" class="btn btn-outline-primary flex-grow-1">
+                                            <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                                        </a>
+                                        <a asp-page="./TwoFactorAuthentication" class="btn btn-outline-primary flex-grow-1">
+                                            <i class="fas fa-lock me-2"></i>Xác thực 2 lớp
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                    <button id="update-profile-button" type="submit" class="btn btn-primary px-4">
+                                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                    </button>
+                                    <a href="/" class="btn btn-link text-decoration-none">
+                                        <i class="fas fa-arrow-left me-2"></i>Về trang chủ
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lịch sử hoạt động -->
+            <div class="card shadow-sm border-0 rounded-3 mt-4 overflow-hidden">
+                <div class="card-header bg-light py-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-history me-2 text-primary"></i>
+                        <h5 class="mb-0 fw-bold">Lịch sử hoạt động</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1 fw-semibold">Cập nhật thông tin</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    @DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1 fw-semibold">Thay đổi mật khẩu</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    @DateTime.Now.AddDays(-7).ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1 fw-semibold">Tạo tài khoản</h6>
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-clock me-1"></i>
+                                    @DateTime.Now.AddYears(-1).ToString("dd/MM/yyyy HH:mm")
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 3rem;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -2rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+    }
+
+    .timeline-content {
+        padding-left: 1rem;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .input-group-text {
+        border: none;
+    }
+
+    .form-control {
+        border: 1px solid #e0e0e0;
+    }
+
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78,115,223,0.25);
+    }
+
+    .avatar-placeholder:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .btn-outline-primary {
+        border-width: 2px;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: rgba(78,115,223,0.1);
+        color: #4e73df;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+} 
